@@ -11,3 +11,14 @@ type CheckResponse struct {
 	HexBLSKey string
 	Status    string
 }
+
+// OutputMessage defines the message to be sent to an output notifier
+type OutputMessage struct {
+	Type               MessageOutputType
+	IdentifierType     string
+	Identifier         string
+	ShortIdentifier    string
+	IdentifierURL      string
+	ExecutorName       string
+	ProblemEncountered string
+}
