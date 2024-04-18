@@ -11,11 +11,11 @@ import (
 	"multiversx/mvx-keys-monitor/config"
 	"multiversx/mvx-keys-monitor/factory"
 
-	"github.com/BurntSushi/toml"
 	"github.com/multiversx/mx-chain-core-go/core"
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-logger-go/file"
+	"github.com/pelletier/go-toml"
 	"github.com/urfave/cli"
 )
 
@@ -72,7 +72,12 @@ func main() {
 		logLevel,
 		logSaveFile,
 	}
-	app.Authors = []cli.Author{}
+	app.Authors = []cli.Author{
+		{
+			Name:  "The MultiversX Team",
+			Email: "contact@multiversx.com",
+		},
+	}
 
 	app.Action = func(c *cli.Context) error {
 		return startMonitorTool(c, baseVersion, log)
