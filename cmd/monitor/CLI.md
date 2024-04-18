@@ -11,6 +11,9 @@ NAME:
 USAGE:
    monitor [global options]
    
+AUTHOR:
+   The MultiversX Team <contact@multiversx.com>
+   
 GLOBAL OPTIONS:
    --config value        The main configuration file (default: "./config/config.toml")
    --credentials value   The credentials configuration file (default: "./config/credentials.toml")
