@@ -2,6 +2,7 @@ package notifiers
 
 import (
 	"fmt"
+	"strings"
 
 	"multiversx/mx-chain-keys-monitor-go/core"
 
@@ -32,17 +33,7 @@ func (notifier *logNotifier) OutputMessages(messages ...core.OutputMessage) {
 }
 
 func (notifier *logNotifier) output(message core.OutputMessage) {
-	msg := ""
-	if len(message.IdentifierType) > 0 {
-		msg += message.IdentifierType + " "
-	}
-	if len(message.Identifier) > 0 {
-		msg += message.Identifier + " "
-	}
-	if len(message.ProblemEncountered) > 0 {
-		msg += "-> " + message.ProblemEncountered + " "
-	}
-	msg += fmt.Sprintf("called by %s", message.ExecutorName)
+	msg := composeMessage(message)
 
 	logLevel := logger.LogInfo
 	switch message.Type {
@@ -53,6 +44,26 @@ func (notifier *logNotifier) output(message core.OutputMessage) {
 	}
 
 	notifier.log.Log(logLevel, msg)
+}
+
+func composeMessage(message core.OutputMessage) string {
+	stringBuilder := &strings.Builder{}
+	if len(message.IdentifierType) > 0 {
+		stringBuilder.WriteString(message.IdentifierType)
+		stringBuilder.WriteString(" ")
+	}
+	if len(message.Identifier) > 0 {
+		stringBuilder.WriteString(message.Identifier)
+		stringBuilder.WriteString(" ")
+	}
+	if len(message.ProblemEncountered) > 0 {
+		stringBuilder.WriteString("-> ")
+		stringBuilder.WriteString(message.ProblemEncountered)
+		stringBuilder.WriteString(" ")
+	}
+	stringBuilder.WriteString(fmt.Sprintf("called by %s", message.ExecutorName))
+
+	return stringBuilder.String()
 }
 
 // IsInterfaceNil returns true if there is no value under the interface
