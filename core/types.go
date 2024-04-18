@@ -12,6 +12,7 @@ const (
 	ErrorMessageOutputType   MessageOutputType = 5
 )
 
+// String converts the type to its string representation
 func (messageOutputType MessageOutputType) String() string {
 	switch messageOutputType {
 	case InfoMessageOutputType:
