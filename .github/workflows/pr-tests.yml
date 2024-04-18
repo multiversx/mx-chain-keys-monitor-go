@@ -30,4 +30,4 @@ jobs:
         uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: multiversx/mx-chain-keys-monitor-go
+          slug: github.com/multiversx/mx-chain-keys-monitor-go
