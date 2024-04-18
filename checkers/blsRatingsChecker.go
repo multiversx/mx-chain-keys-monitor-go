@@ -3,7 +3,7 @@ package checkers
 import (
 	"fmt"
 
-	"multiversx/mvx-keys-monitor/core"
+	"multiversx/mx-chain-keys-monitor-go/core"
 
 	logger "github.com/multiversx/mx-chain-logger-go"
 )

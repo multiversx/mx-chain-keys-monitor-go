@@ -1,4 +1,4 @@
-module multiversx/mvx-keys-monitor
+module multiversx/mx-chain-keys-monitor-go
 
 go 1.20
 

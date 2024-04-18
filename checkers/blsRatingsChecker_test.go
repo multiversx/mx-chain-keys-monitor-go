@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"multiversx/mvx-keys-monitor/core"
+	"multiversx/mx-chain-keys-monitor-go/core"
 
 	"github.com/stretchr/testify/assert"
 )
