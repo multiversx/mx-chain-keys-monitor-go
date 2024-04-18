@@ -50,7 +50,7 @@ func (checker *blsRatingsChecker) Check(statistics map[string]*core.ValidatorSta
 
 	log.Debug("blsRatingsChecker.Check", "checker name", checker.name, "num keys", len(allKeys))
 
-	response := make([]core.CheckResponse, 0)
+	results := make([]core.CheckResponse, 0)
 	for _, blsKey := range allKeys {
 		if len(blsKey) == 0 {
 			continue
@@ -63,7 +63,7 @@ func (checker *blsRatingsChecker) Check(statistics map[string]*core.ValidatorSta
 		}
 		if stats.TempRating < jailThreshold {
 			log.Debug("found imminent jail node", "checker", checker.name, "bls key", blsKey)
-			response = append(response, core.CheckResponse{
+			results = append(results, core.CheckResponse{
 				HexBLSKey: blsKey,
 				Status:    fmt.Sprintf(imminentJailMessageFormat, stats.TempRating, stats.Rating),
 			})
@@ -77,13 +77,13 @@ func (checker *blsRatingsChecker) Check(statistics map[string]*core.ValidatorSta
 		}
 
 		log.Debug("found node with rating drop", "checker", checker.name, "bls key", blsKey)
-		response = append(response, core.CheckResponse{
+		results = append(results, core.CheckResponse{
 			HexBLSKey: blsKey,
 			Status:    fmt.Sprintf(ratingDropMessageFormat, stats.TempRating, stats.Rating),
 		})
 	}
 
-	return response, nil
+	return results, nil
 }
 
 // IsInterfaceNil returns true if there is no value under the interface
