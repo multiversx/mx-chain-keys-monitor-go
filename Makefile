@@ -15,6 +15,7 @@ run-lint:
 lint: lint-install run-lint
 
 cli-docs:
+	cd ./cmd/monitor && go build
 	cd ./cmd && bash ./CLI.md.sh
 
 check-cli-md:

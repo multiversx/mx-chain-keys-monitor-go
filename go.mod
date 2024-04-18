@@ -3,7 +3,6 @@ module multiversx/mvx-keys-monitor
 go 1.20
 
 require (
-	github.com/BurntSushi/toml v0.3.1
 	github.com/multiversx/mx-chain-core-go v1.2.18
 	github.com/multiversx/mx-chain-logger-go v1.0.13
 	github.com/pelletier/go-toml v1.9.3
