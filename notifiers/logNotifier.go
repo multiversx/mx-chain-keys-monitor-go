@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"multiversx/mx-chain-keys-monitor-go/core"
+	"github.com/multiversx/mx-chain-keys-monitor-go/core"
 
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	logger "github.com/multiversx/mx-chain-logger-go"
