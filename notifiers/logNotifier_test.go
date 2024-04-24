@@ -5,7 +5,6 @@ import (
 
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
 	"github.com/multiversx/mx-chain-keys-monitor-go/mock"
-
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/stretchr/testify/assert"
 )

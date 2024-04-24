@@ -1,129 +1,65 @@
 package notifiers
 
 import (
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
+	"errors"
+	"fmt"
+	"net/smtp"
 	"os"
-	"sync/atomic"
 	"testing"
-	"time"
 
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/stretchr/testify/assert"
 )
 
-const testToken = "test-token"
-const testUserKey = "test-user-key"
-
-func createHttpTestServerThatRespondsOK(
-	t *testing.T,
-	expectedMessage string,
-	expectedTitle string,
-	numCalls *uint32,
-) *httptest.Server {
-	response := &pushoverResponse{
-		Status:  1,
-		Request: "e43a9e0f-6836-42f1-8b06-e8bc56012637",
-	}
-	responseBytes, _ := json.Marshal(response)
-
-	return httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		body := req.Body
-		defer func() {
-			errClose := body.Close()
-			assert.Nil(t, errClose)
-		}()
-		buff := make([]byte, 524288)
-		numRead, _ := body.Read(buff)
-		buff = buff[:numRead]
-
-		request := &pushoverRequest{}
-		err := json.Unmarshal(buff, request)
-		assert.Nil(t, err)
-
-		assert.Equal(t, testToken, request.Token)
-		assert.Equal(t, testUserKey, request.User)
-		assert.Equal(t, 1, request.HTML)
-		assert.Equal(t, expectedMessage, request.Message)
-		assert.Equal(t, expectedTitle, request.Title)
-
-		rw.WriteHeader(http.StatusOK)
-		_, _ = rw.Write(responseBytes)
-		atomic.AddUint32(numCalls, 1)
-	}))
-}
-
-func TestNewPushoverNotifier(t *testing.T) {
+func TestNewSmtpNotifier(t *testing.T) {
 	t.Parallel()
 
-	notifier := NewPushoverNotifier("url", "", "")
+	notifier := NewSmtpNotifier(ArgsSmtpNotifier{})
 	assert.NotNil(t, notifier)
 }
 
-func TestPushoverNotifier_IsInterfaceNil(t *testing.T) {
+func TestSmtpNotifier_IsInterfaceNil(t *testing.T) {
 	t.Parallel()
 
-	var instance *pushoverNotifier
+	var instance *smtpNotifier
 	assert.True(t, instance.IsInterfaceNil())
 
-	instance = &pushoverNotifier{}
+	instance = &smtpNotifier{}
 	assert.False(t, instance.IsInterfaceNil())
 }
 
-func TestPushoverNotifier_OutputMessages(t *testing.T) {
-	t.Parallel()
+func TestSmtpNotifier_OutputMessages(t *testing.T) {
+	testArgs := ArgsSmtpNotifier{
+		To:       "to@email.com",
+		SmtpPort: 37,
+		SmtpHost: "host.email.com",
+		From:     "from@email.com",
+		Password: "pass",
+	}
+	expectedErr := errors.New("expected error")
 
 	t.Run("sending empty slice of messages should not call the service", func(t *testing.T) {
 		t.Parallel()
 
-		numCalls := uint32(0)
-		expectedTitle := ""
-		expectedMessage := ""
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
-		defer testServer.Close()
+		notifier := NewSmtpNotifier(testArgs)
+		notifier.sendMail = func(host string, auth smtp.Auth, from string, to []string, msgBytes []byte) error {
+			assert.Fail(t, "should have not called sendMail function")
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+			return nil
+		}
 		notifier.OutputMessages()
-
-		time.Sleep(time.Second)
-		assert.Equal(t, uint32(0), atomic.LoadUint32(&numCalls))
 	})
-	t.Run("post method fails should error", func(t *testing.T) {
+	t.Run("send mail function fails, should error", func(t *testing.T) {
 		t.Parallel()
 
-		notifier := NewPushoverNotifier("not-a-server-URL", "", "")
+		notifier := NewSmtpNotifier(testArgs)
+		notifier.sendMail = func(host string, auth smtp.Auth, from string, to []string, msgBytes []byte) error {
+			return expectedErr
+		}
 		err := notifier.pushNotification("test", "title")
 		assert.NotNil(t, err)
-		assert.Contains(t, err.Error(), "not-a-server-URL")
-	})
-	t.Run("server errors should error", func(t *testing.T) {
-		t.Parallel()
-
-		testHttpServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-			rw.WriteHeader(http.StatusInternalServerError)
-		}))
-
-		notifier := NewPushoverNotifier(testHttpServer.URL, "", "")
-		err := notifier.pushNotification("test", "title")
-		assert.ErrorIs(t, err, errReturnCodeIsNotOk)
-	})
-	t.Run("http post response is not OK, should error", func(t *testing.T) {
-		t.Parallel()
-
-		testHttpServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-			rw.WriteHeader(http.StatusOK)
-			_, _ = rw.Write([]byte("not-a-valid-json"))
-		}))
-
-		notifier := NewPushoverNotifier(testHttpServer.URL, "", "")
-		err := notifier.pushNotification("test", "title")
-		assert.NotNil(t, err)
-		assert.Contains(t, err.Error(), "invalid character")
-
-		// make sure any accidental calls on API endpoint routes are caught by the test server
-		time.Sleep(time.Second)
+		assert.ErrorIs(t, err, expectedErr)
 	})
 	t.Run("sending info messages should work", func(t *testing.T) {
 		t.Parallel()
@@ -148,24 +84,38 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 			ExecutorName:    "executor",
 		}
 
-		numCalls := uint32(0)
-		expectedTitle := "ⓘ Info for executor"
-		expectedMessage := `✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+		expectedBody := `Subject: ⓘ Info for executor 
+MIME-version: 1.0;
+Content-Type: text/html; charset="UTF-8";
 
-✅ info10 <b></b>
 
-✅  <b>info20</b>
 
+
+<!DOCTYPE html>
+<html lang="en">
+<body>
+   ✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+
+<br>✅ info10 <b></b>
+
+<br>✅  <b>info20</b>
+
+<br>
+</body>
+</html>
 `
+		var sentMsgBytes []byte
+		notifier := NewSmtpNotifier(testArgs)
+		notifier.sendMail = func(host string, auth smtp.Auth, from string, to []string, msgBytes []byte) error {
+			assert.Equal(t, fmt.Sprintf("%s:%d", testArgs.SmtpHost, testArgs.SmtpPort), host)
+			assert.Equal(t, testArgs.From, from)
+			assert.Equal(t, []string{testArgs.To}, to)
+			sentMsgBytes = msgBytes
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
-		defer testServer.Close()
-
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+			return nil
+		}
 		notifier.OutputMessages(msg1, msg2, msg3)
-
-		time.Sleep(time.Second)
-		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
+		assert.Equal(t, expectedBody, string(sentMsgBytes))
 	})
 	t.Run("sending info messages and warn messages should work", func(t *testing.T) {
 		t.Parallel()
@@ -190,24 +140,39 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 			ExecutorName:    "executor",
 		}
 
-		numCalls := uint32(0)
-		expectedTitle := "⚠️ Warnings occurred on executor"
-		expectedMessage := `✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+		expectedBody := `Subject: ⚠️ Warnings occurred on executor 
+MIME-version: 1.0;
+Content-Type: text/html; charset="UTF-8";
 
-✅ info10 <b></b>
 
-⚠️  <b>info20</b>
 
+
+<!DOCTYPE html>
+<html lang="en">
+<body>
+   ✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+
+<br>✅ info10 <b></b>
+
+<br>⚠️  <b>info20</b>
+
+<br>
+</body>
+</html>
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
-		defer testServer.Close()
+		var sentMsgBytes []byte
+		notifier := NewSmtpNotifier(testArgs)
+		notifier.sendMail = func(host string, auth smtp.Auth, from string, to []string, msgBytes []byte) error {
+			assert.Equal(t, fmt.Sprintf("%s:%d", testArgs.SmtpHost, testArgs.SmtpPort), host)
+			assert.Equal(t, testArgs.From, from)
+			assert.Equal(t, []string{testArgs.To}, to)
+			sentMsgBytes = msgBytes
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+			return nil
+		}
 		notifier.OutputMessages(msg1, msg2, msg3)
-
-		time.Sleep(time.Second)
-		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
+		assert.Equal(t, expectedBody, string(sentMsgBytes))
 	})
 	t.Run("sending info, warn and error messages should work", func(t *testing.T) {
 		t.Parallel()
@@ -232,24 +197,39 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 			ExecutorName:    "executor",
 		}
 
-		numCalls := uint32(0)
-		expectedTitle := "🚨 Problems occurred on executor"
-		expectedMessage := `🚨 info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+		expectedBody := `Subject: 🚨 Problems occurred on executor 
+MIME-version: 1.0;
+Content-Type: text/html; charset="UTF-8";
 
-✅ info10 <b></b>
 
-⚠️  <b>info20</b>
 
+
+<!DOCTYPE html>
+<html lang="en">
+<body>
+   🚨 info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+
+<br>✅ info10 <b></b>
+
+<br>⚠️  <b>info20</b>
+
+<br>
+</body>
+</html>
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
-		defer testServer.Close()
+		var sentMsgBytes []byte
+		notifier := NewSmtpNotifier(testArgs)
+		notifier.sendMail = func(host string, auth smtp.Auth, from string, to []string, msgBytes []byte) error {
+			assert.Equal(t, fmt.Sprintf("%s:%d", testArgs.SmtpHost, testArgs.SmtpPort), host)
+			assert.Equal(t, testArgs.From, from)
+			assert.Equal(t, []string{testArgs.To}, to)
+			sentMsgBytes = msgBytes
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+			return nil
+		}
 		notifier.OutputMessages(msg1, msg2, msg3)
-
-		time.Sleep(time.Second)
-		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
+		assert.Equal(t, expectedBody, string(sentMsgBytes))
 	})
 	t.Run("sending unknown type of messages should work", func(t *testing.T) {
 		t.Parallel()
@@ -274,39 +254,58 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 			ExecutorName:    "executor",
 		}
 
-		numCalls := uint32(0)
-		expectedTitle := "executor"
-		expectedMessage := ` info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+		expectedBody := `Subject: executor 
+MIME-version: 1.0;
+Content-Type: text/html; charset="UTF-8";
 
- info10 <b></b>
 
-  <b>info20</b>
 
+
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+
+<br> info10 <b></b>
+
+<br>  <b>info20</b>
+
+<br>
+</body>
+</html>
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
-		defer testServer.Close()
+		var sentMsgBytes []byte
+		notifier := NewSmtpNotifier(testArgs)
+		notifier.sendMail = func(host string, auth smtp.Auth, from string, to []string, msgBytes []byte) error {
+			assert.Equal(t, fmt.Sprintf("%s:%d", testArgs.SmtpHost, testArgs.SmtpPort), host)
+			assert.Equal(t, testArgs.From, from)
+			assert.Equal(t, []string{testArgs.To}, to)
+			sentMsgBytes = msgBytes
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+			return nil
+		}
 		notifier.OutputMessages(msg1, msg2, msg3)
-
-		time.Sleep(time.Second)
-		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
+		assert.Equal(t, expectedBody, string(sentMsgBytes))
 	})
 }
 
-func TestPushoverNotifier_FunctionalTest(t *testing.T) {
-	// before running this test, please define your environment variables PUSHOVER_TOKEN and PUSHOVER_USERKEY so this test can work
+func TestSmtpNotifier_FunctionalTest(t *testing.T) {
+	// before running this test, please define your environment variables SMTP_TO, SMTP_FROM and SMTP_PASSWORD so this test can work
 
 	t.Skip("this is a functional test, will need real credentials")
 
 	_ = logger.SetLogLevel("*:DEBUG")
 
-	notifier := NewPushoverNotifier(
-		"https://api.pushover.net/1/messages.json",
-		os.Getenv("PUSHOVER_TOKEN"),
-		os.Getenv("PUSHOVER_USERKEY"),
-	)
+	args := ArgsSmtpNotifier{
+		To:       os.Getenv("SMTP_TO"),
+		SmtpPort: 587,
+		SmtpHost: "smtp.gmail.com",
+		From:     os.Getenv("SMTP_FROM"),
+		Password: os.Getenv("SMTP_PASSWORD"),
+	}
+
+	notifier := NewSmtpNotifier(args)
 
 	t.Run("info messages", func(t *testing.T) {
 		message1 := core.OutputMessage{
