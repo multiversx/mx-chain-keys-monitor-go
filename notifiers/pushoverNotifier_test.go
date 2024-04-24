@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
-
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/stretchr/testify/assert"
 )

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
-
 	logger "github.com/multiversx/mx-chain-logger-go"
 	httpSDK "github.com/multiversx/mx-sdk-go/core/http"
 )
