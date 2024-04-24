@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
-
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/stretchr/testify/assert"
 )
@@ -296,14 +296,16 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 }
 
 func TestPushoverNotifier_FunctionalTest(t *testing.T) {
+	// before running this test, please define your environment variables PUSHOVER_TOKEN and PUSHOVER_USERKEY so this test can work
+
 	t.Skip("this is a functional test, will need real credentials")
 
 	_ = logger.SetLogLevel("*:DEBUG")
 
 	notifier := NewPushoverNotifier(
 		"https://api.pushover.net/1/messages.json",
-		"", // TODO: replace here your token value
-		"", // TODO: replace here your userKey value
+		os.Getenv("PUSHOVER_TOKEN"),
+		os.Getenv("PUSHOVER_USERKEY"),
 	)
 
 	t.Run("info messages", func(t *testing.T) {

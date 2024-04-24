@@ -8,11 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/multiversx/mx-chain-keys-monitor-go/config"
-	"github.com/multiversx/mx-chain-keys-monitor-go/factory"
-
 	"github.com/multiversx/mx-chain-core-go/core"
 	"github.com/multiversx/mx-chain-core-go/core/check"
+	"github.com/multiversx/mx-chain-keys-monitor-go/config"
+	"github.com/multiversx/mx-chain-keys-monitor-go/factory"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-logger-go/file"
 	"github.com/pelletier/go-toml"

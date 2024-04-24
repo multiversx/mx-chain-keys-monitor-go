@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"net/smtp"
+	"os"
 	"testing"
 
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
-
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/stretchr/testify/assert"
 )
@@ -291,16 +291,18 @@ Content-Type: text/html; charset="UTF-8";
 }
 
 func TestSmtpNotifier_FunctionalTest(t *testing.T) {
+	// before running this test, please define your environment variables SMTP_TO, SMTP_FROM and SMTP_PASSWORD so this test can work
+
 	t.Skip("this is a functional test, will need real credentials")
 
 	_ = logger.SetLogLevel("*:DEBUG")
 
 	args := ArgsSmtpNotifier{
-		To:       "", // TODO: replace here your receiver email value
+		To:       os.Getenv("SMTP_TO"),
 		SmtpPort: 587,
 		SmtpHost: "smtp.gmail.com",
-		From:     "", // TODO: replace here your sender email value
-		Password: "", // TODO: replace here your password / App password value
+		From:     os.Getenv("SMTP_FROM"),
+		Password: os.Getenv("SMTP_PASSWORD"),
 	}
 
 	notifier := NewSmtpNotifier(args)
