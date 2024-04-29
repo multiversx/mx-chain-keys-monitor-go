@@ -7,15 +7,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/multiversx/mx-chain-keys-monitor-go/core"
-
 	"github.com/multiversx/mx-chain-core-go/core/check"
+	"github.com/multiversx/mx-chain-keys-monitor-go/core"
 )
 
-const getBlsKeysStatusFuncName = "getBlsKeysStatus"
-const validatorScAddress = "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqplllst77y4l"
-const endpoint = "vm-values/query"
-const stakedStatus = "staked"
+const (
+	getBlsKeysStatusFuncName = "getBlsKeysStatus"
+	validatorScAddress       = "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqplllst77y4l"
+	endpoint                 = "vm-values/query"
+	stakedStatus             = "staked"
+)
 
 type vmQueryRequest struct {
 	ScAddress string   `json:"scAddress"`
@@ -105,7 +106,7 @@ func (fetcher *blsKeysFetcher) getBlsKeys(ctx context.Context, address core.Addr
 	if err != nil {
 		return nil, err
 	}
-	if !core.IsStatusCodeIs2xx(statusCode) {
+	if !core.IsHttpStatusCodeSuccess(statusCode) {
 		return nil, fmt.Errorf("%w, but %d", errReturnCodeIsNotOk, statusCode)
 	}
 	response := &vmQueryResponse{}
@@ -115,15 +116,18 @@ func (fetcher *blsKeysFetcher) getBlsKeys(ctx context.Context, address core.Addr
 	}
 
 	keys := make([]string, 0)
-	var accumulator []byte
-	for _, value := range response.Data.Data.ReturnData {
-		if len(value) == core.BLSKeyLen {
-			accumulator = value
+	for i := 0; i < len(response.Data.Data.ReturnData)-1; i += 2 {
+		blsKey := response.Data.Data.ReturnData[i]
+		status := response.Data.Data.ReturnData[i+1]
+		if len(blsKey) != core.BLSKeyLen {
+			log.Warn("invalid response fetched", "returned data", fmt.Sprintf("%+v", response.Data.Data.ReturnData))
 			continue
 		}
-		if string(value) == stakedStatus {
-			keys = append(keys, hex.EncodeToString(accumulator))
+		if string(status) != stakedStatus {
+			continue
 		}
+
+		keys = append(keys, hex.EncodeToString(blsKey))
 	}
 
 	log.Debug("blsKeysFetcher.getBlsKeys", "sender", sender, "address", address.Bech32, "num keys", len(keys))
