@@ -264,14 +264,18 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 func TestTelegramNotifier_FunctionalTest(t *testing.T) {
 	// before running this test, please define your environment variables TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID so this test can work
 
-	t.Skip("this is a functional test, will need real credentials")
+	telegramBotToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	telegramChatID := os.Getenv("TELEGRAM_CHAT_ID")
+	if len(telegramChatID) == 0 || len(telegramBotToken) == 0 {
+		t.Skip("this is a functional test, will need real credentials")
+	}
 
 	_ = logger.SetLogLevel("*:DEBUG")
 
 	notifier := NewTelegramNotifier(
 		"https://api.telegram.org",
-		os.Getenv("TELEGRAM_BOT_TOKEN"),
-		os.Getenv("TELEGRAM_CHAT_ID"),
+		telegramBotToken,
+		telegramChatID,
 	)
 
 	t.Run("info messages", func(t *testing.T) {

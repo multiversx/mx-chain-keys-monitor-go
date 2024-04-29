@@ -298,14 +298,18 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 func TestPushoverNotifier_FunctionalTest(t *testing.T) {
 	// before running this test, please define your environment variables PUSHOVER_TOKEN and PUSHOVER_USERKEY so this test can work
 
-	t.Skip("this is a functional test, will need real credentials")
+	pushoverToken := os.Getenv("PUSHOVER_TOKEN")
+	pushoverUserKey := os.Getenv("PUSHOVER_USERKEY")
+	if len(pushoverToken) == 0 || len(pushoverUserKey) == 0 {
+		t.Skip("this is a functional test, will need real credentials")
+	}
 
 	_ = logger.SetLogLevel("*:DEBUG")
 
 	notifier := NewPushoverNotifier(
 		"https://api.pushover.net/1/messages.json",
-		os.Getenv("PUSHOVER_TOKEN"),
-		os.Getenv("PUSHOVER_USERKEY"),
+		pushoverToken,
+		pushoverUserKey,
 	)
 
 	t.Run("info messages", func(t *testing.T) {
