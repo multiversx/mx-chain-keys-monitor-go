@@ -1,7 +1,6 @@
 package notifiers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -24,12 +23,6 @@ func createHttpTestServerThatRespondsOKForTelegram(
 	expectedTitle string,
 	numCalls *uint32,
 ) *httptest.Server {
-	response := &pushoverResponse{
-		Status:  1,
-		Request: "e43a9e0f-6836-42f1-8b06-e8bc56012637",
-	}
-	responseBytes, _ := json.Marshal(response)
-
 	return httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		values := req.URL.Query()
 		assert.Equal(t, testTelegramChatID, values.Get("chat_id"))
@@ -40,7 +33,6 @@ func createHttpTestServerThatRespondsOKForTelegram(
 		assert.Equal(t, messageString, values.Get("text"))
 
 		rw.WriteHeader(http.StatusOK)
-		_, _ = rw.Write(responseBytes)
 		atomic.AddUint32(numCalls, 1)
 	}))
 }

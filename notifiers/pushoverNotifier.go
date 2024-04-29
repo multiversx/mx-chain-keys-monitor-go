@@ -45,7 +45,7 @@ func NewPushoverNotifier(url string, token string, userKey string) *pushoverNoti
 
 // OutputMessages will send the provided messages to the Pushover service
 func (notifier *pushoverNotifier) OutputMessages(messages ...core.OutputMessage) {
-	log.Debug("notifier.OutputMessages pushing error notification", "num messages", len(messages))
+	log.Debug("pushoverNotifier.OutputMessages sending messages", "num messages", len(messages))
 	if len(messages) == 0 {
 		return
 	}
@@ -64,7 +64,7 @@ func (notifier *pushoverNotifier) OutputMessages(messages ...core.OutputMessage)
 
 	err := notifier.pushNotification(msgString, title)
 	if err != nil {
-		log.Error("notifier.OutputMessage pushing notification", "error", err)
+		log.Error("pushoverNotifier.OutputMessages: error sending notification", "error", err)
 	}
 }
 
@@ -146,7 +146,7 @@ func (notifier *pushoverNotifier) pushNotification(msgString string, title strin
 		return err
 	}
 
-	log.Debug("notifier.pushNotification: sent notification",
+	log.Debug("pushoverNotifier.pushNotification: sent notification",
 		"status", resp.Status, "request ID", resp.Request)
 
 	return nil

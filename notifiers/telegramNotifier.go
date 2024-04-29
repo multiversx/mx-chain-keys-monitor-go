@@ -26,7 +26,7 @@ func NewTelegramNotifier(url string, token string, chatID string) *telegramNotif
 
 // OutputMessages will push the provided messages as error
 func (notifier *telegramNotifier) OutputMessages(messages ...core.OutputMessage) {
-	log.Debug("notifier.OutputMessages sending telegram notification", "num messages", len(messages))
+	log.Debug("telegramNotifier.OutputMessages sending messages", "num messages", len(messages))
 	if len(messages) == 0 {
 		return
 	}
@@ -45,7 +45,7 @@ func (notifier *telegramNotifier) OutputMessages(messages ...core.OutputMessage)
 
 	err := notifier.pushNotification(msgString, title)
 	if err != nil {
-		log.Error("notifier.OutputMessages sending notification", "error", err)
+		log.Error("telegramNotifier.OutputMessages: error sending notification", "error", err)
 	}
 }
 
@@ -68,7 +68,7 @@ func (notifier *telegramNotifier) pushNotification(msgString string, title strin
 		return fmt.Errorf("%w, but %d", errReturnCodeIsNotOk, statusCode)
 	}
 
-	log.Debug("notifier.pushNotification: sent notification",
+	log.Debug("telegramNotifier.pushNotification: sent notification",
 		"status", statusCode)
 
 	return nil
@@ -78,5 +78,3 @@ func (notifier *telegramNotifier) pushNotification(msgString string, title strin
 func (notifier *telegramNotifier) IsInterfaceNil() bool {
 	return notifier == nil
 }
-
-// https://api.telegram.org/bot7187383001:AAFKmIYFFVF3OLi7ibEE_V2KV0C1k2KGOng/sendMessage?chat_id=589289766&parse_mode=html&text=<b>aaa</b>
