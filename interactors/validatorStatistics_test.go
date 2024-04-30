@@ -9,7 +9,6 @@ import (
 
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
 	"github.com/multiversx/mx-chain-keys-monitor-go/mock"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -86,7 +85,7 @@ func TestValidatorStatisticsInteractor_Query(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "invalid character")
 	})
-	t.Run("http client wrapper return an invalid response should return error", func(t *testing.T) {
+	t.Run("http client wrapper returns an invalid response should return error", func(t *testing.T) {
 		t.Parallel()
 
 		wrapper := &mock.HTTPClientWrapperStub{

@@ -1,7 +1,7 @@
 package notifiers
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,65 +14,47 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testToken = "test-token"
-const testUserKey = "test-user-key"
+const testTelegramToken = "test-token"
+const testTelegramChatID = "test-chat-id"
 
-func createHttpTestServerThatRespondsOK(
+func createHttpTestServerThatRespondsOKForTelegram(
 	t *testing.T,
 	expectedMessage string,
 	expectedTitle string,
 	numCalls *uint32,
 ) *httptest.Server {
-	response := &pushoverResponse{
-		Status:  1,
-		Request: "e43a9e0f-6836-42f1-8b06-e8bc56012637",
-	}
-	responseBytes, _ := json.Marshal(response)
-
 	return httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		body := req.Body
-		defer func() {
-			errClose := body.Close()
-			assert.Nil(t, errClose)
-		}()
-		buff := make([]byte, 524288)
-		numRead, _ := body.Read(buff)
-		buff = buff[:numRead]
+		values := req.URL.Query()
+		assert.Equal(t, testTelegramChatID, values.Get("chat_id"))
+		assert.Equal(t, "html", values.Get("parse_mode"))
+		assert.Contains(t, req.URL.Path, fmt.Sprintf("/bot%s/sendMessage", testTelegramToken))
 
-		request := &pushoverRequest{}
-		err := json.Unmarshal(buff, request)
-		assert.Nil(t, err)
-
-		assert.Equal(t, testToken, request.Token)
-		assert.Equal(t, testUserKey, request.User)
-		assert.Equal(t, 1, request.HTML)
-		assert.Equal(t, expectedMessage, request.Message)
-		assert.Equal(t, expectedTitle, request.Title)
+		messageString := fmt.Sprintf("%s\n\n%s", expectedTitle, expectedMessage)
+		assert.Equal(t, messageString, values.Get("text"))
 
 		rw.WriteHeader(http.StatusOK)
-		_, _ = rw.Write(responseBytes)
 		atomic.AddUint32(numCalls, 1)
 	}))
 }
 
-func TestNewPushoverNotifier(t *testing.T) {
+func TestNewTelegramNotifier(t *testing.T) {
 	t.Parallel()
 
-	notifier := NewPushoverNotifier("url", "", "")
+	notifier := NewTelegramNotifier("url", "", "")
 	assert.NotNil(t, notifier)
 }
 
-func TestPushoverNotifier_IsInterfaceNil(t *testing.T) {
+func TestTelegramNotifier_IsInterfaceNil(t *testing.T) {
 	t.Parallel()
 
-	var instance *pushoverNotifier
+	var instance *telegramNotifier
 	assert.True(t, instance.IsInterfaceNil())
 
-	instance = &pushoverNotifier{}
+	instance = &telegramNotifier{}
 	assert.False(t, instance.IsInterfaceNil())
 }
 
-func TestPushoverNotifier_OutputMessages(t *testing.T) {
+func TestTelegramNotifier_OutputMessages(t *testing.T) {
 	t.Parallel()
 
 	t.Run("sending empty slice of messages should not call the service", func(t *testing.T) {
@@ -81,10 +63,10 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		numCalls := uint32(0)
 		expectedTitle := ""
 		expectedMessage := ""
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForTelegram(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
 		notifier.OutputMessages()
 
 		time.Sleep(time.Second)
@@ -93,7 +75,7 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 	t.Run("post method fails should error", func(t *testing.T) {
 		t.Parallel()
 
-		notifier := NewPushoverNotifier("not-a-server-URL", "", "")
+		notifier := NewTelegramNotifier("not-a-server-URL", "", "")
 		err := notifier.pushNotification("test", "title")
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "not-a-server-URL")
@@ -105,25 +87,9 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 			rw.WriteHeader(http.StatusInternalServerError)
 		}))
 
-		notifier := NewPushoverNotifier(testHttpServer.URL, "", "")
+		notifier := NewTelegramNotifier(testHttpServer.URL, "", "")
 		err := notifier.pushNotification("test", "title")
 		assert.ErrorIs(t, err, errReturnCodeIsNotOk)
-	})
-	t.Run("http post response is not OK, should error", func(t *testing.T) {
-		t.Parallel()
-
-		testHttpServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-			rw.WriteHeader(http.StatusOK)
-			_, _ = rw.Write([]byte("not-a-valid-json"))
-		}))
-
-		notifier := NewPushoverNotifier(testHttpServer.URL, "", "")
-		err := notifier.pushNotification("test", "title")
-		assert.NotNil(t, err)
-		assert.Contains(t, err.Error(), "invalid character")
-
-		// make sure any accidental calls on API endpoint routes are caught by the test server
-		time.Sleep(time.Second)
 	})
 	t.Run("sending info messages should work", func(t *testing.T) {
 		t.Parallel()
@@ -158,10 +124,10 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForTelegram(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
 		notifier.OutputMessages(msg1, msg2, msg3)
 
 		time.Sleep(time.Second)
@@ -200,10 +166,10 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForTelegram(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
 		notifier.OutputMessages(msg1, msg2, msg3)
 
 		time.Sleep(time.Second)
@@ -242,10 +208,10 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForTelegram(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
 		notifier.OutputMessages(msg1, msg2, msg3)
 
 		time.Sleep(time.Second)
@@ -284,10 +250,10 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForTelegram(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
 		notifier.OutputMessages(msg1, msg2, msg3)
 
 		time.Sleep(time.Second)
@@ -295,21 +261,21 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 	})
 }
 
-func TestPushoverNotifier_FunctionalTest(t *testing.T) {
-	// before running this test, please define your environment variables PUSHOVER_TOKEN and PUSHOVER_USERKEY so this test can work
+func TestTelegramNotifier_FunctionalTest(t *testing.T) {
+	// before running this test, please define your environment variables TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID so this test can work
 
-	pushoverToken := os.Getenv("PUSHOVER_TOKEN")
-	pushoverUserKey := os.Getenv("PUSHOVER_USERKEY")
-	if len(pushoverToken) == 0 || len(pushoverUserKey) == 0 {
+	telegramBotToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	telegramChatID := os.Getenv("TELEGRAM_CHAT_ID")
+	if len(telegramChatID) == 0 || len(telegramBotToken) == 0 {
 		t.Skip("this is a functional test, will need real credentials")
 	}
 
 	_ = logger.SetLogLevel("*:DEBUG")
 
-	notifier := NewPushoverNotifier(
-		"https://api.pushover.net/1/messages.json",
-		pushoverToken,
-		pushoverUserKey,
+	notifier := NewTelegramNotifier(
+		"https://api.telegram.org",
+		telegramBotToken,
+		telegramChatID,
 	)
 
 	t.Run("info messages", func(t *testing.T) {
