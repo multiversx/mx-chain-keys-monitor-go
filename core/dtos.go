@@ -6,6 +6,13 @@ type ValidatorStatistics struct {
 	Rating     float32 `json:"rating"`
 }
 
+// ValidatorStatisticsResponse represents the DTO for the validator/statistics response
+type ValidatorStatisticsResponse struct {
+	Data  map[string]map[string]*ValidatorStatistics `json:"data"`
+	Error string                                     `json:"error"`
+	Code  string                                     `json:"code"`
+}
+
 // CheckResponse defines the checking response DTO
 type CheckResponse struct {
 	HexBLSKey string
@@ -21,4 +28,10 @@ type OutputMessage struct {
 	IdentifierURL      string
 	ExecutorName       string
 	ProblemEncountered string
+}
+
+// Address defines the address DTO with it's 2 representations
+type Address struct {
+	Hex    string
+	Bech32 string
 }
