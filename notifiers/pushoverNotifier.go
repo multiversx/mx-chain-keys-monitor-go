@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
-
 	logger "github.com/multiversx/mx-chain-logger-go"
 	httpSDK "github.com/multiversx/mx-sdk-go/core/http"
 )
@@ -44,28 +43,28 @@ func NewPushoverNotifier(url string, token string, userKey string) *pushoverNoti
 	}
 }
 
-// OutputMessages will push the provided messages as error
+// OutputMessages will send the provided messages to the Pushover service
 func (notifier *pushoverNotifier) OutputMessages(messages ...core.OutputMessage) {
-	log.Debug("notifier.OutputMessage pushing error notification", "num messages", len(messages))
+	log.Debug("pushoverNotifier.OutputMessages sending messages", "num messages", len(messages))
 	if len(messages) == 0 {
 		return
 	}
 
 	msgString := ""
-	maxMessageOutputType := core.MessageOutputType(0)
+	highestMessageOutputType := core.MessageOutputType(0)
 	for _, msg := range messages {
-		if msg.Type > maxMessageOutputType {
-			maxMessageOutputType = msg.Type
+		if msg.Type > highestMessageOutputType {
+			highestMessageOutputType = msg.Type
 		}
 
 		msgString += createMessageString(msg)
 	}
 
-	title := createTitle(maxMessageOutputType, messages[0].ExecutorName)
+	title := createTitle(highestMessageOutputType, messages[0].ExecutorName)
 
 	err := notifier.pushNotification(msgString, title)
 	if err != nil {
-		log.Error("notifier.OutputMessage pushing notification", "error", err)
+		log.Error("pushoverNotifier.OutputMessages: error sending notification", "error", err)
 	}
 }
 
@@ -137,7 +136,7 @@ func (notifier *pushoverNotifier) pushNotification(msgString string, title strin
 	if err != nil {
 		return err
 	}
-	if !core.IsStatusCodeIs2xx(statusCode) {
+	if !core.IsHttpStatusCodeSuccess(statusCode) {
 		return fmt.Errorf("%w, but %d", errReturnCodeIsNotOk, statusCode)
 	}
 
@@ -147,7 +146,7 @@ func (notifier *pushoverNotifier) pushNotification(msgString string, title strin
 		return err
 	}
 
-	log.Debug("notifier.pushNotification: sent notification",
+	log.Debug("pushoverNotifier.pushNotification: sent notification",
 		"status", resp.Status, "request ID", resp.Request)
 
 	return nil

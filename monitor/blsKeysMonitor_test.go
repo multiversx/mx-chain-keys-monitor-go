@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/multiversx/mx-chain-keys-monitor-go/mock"
-
 	"github.com/stretchr/testify/assert"
 )
 

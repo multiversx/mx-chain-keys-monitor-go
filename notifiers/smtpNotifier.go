@@ -54,7 +54,7 @@ func NewSmtpNotifier(args ArgsSmtpNotifier) *smtpNotifier {
 
 // OutputMessages will push the provided messages as error
 func (notifier *smtpNotifier) OutputMessages(messages ...core.OutputMessage) {
-	log.Debug("notifier.OutputMessage pushing error notification as SMTP email", "num messages", len(messages))
+	log.Debug("smtpNotifier.OutputMessages sending messages", "num messages", len(messages))
 	if len(messages) == 0 {
 		return
 	}
@@ -73,7 +73,7 @@ func (notifier *smtpNotifier) OutputMessages(messages ...core.OutputMessage) {
 
 	err := notifier.pushNotification(msgString, title)
 	if err != nil {
-		log.Error("notifier.OutputMessage pushing notification", "error", err)
+		log.Error("smtpNotifier.OutputMessages: error sending notification", "error", err)
 	}
 }
 
@@ -96,7 +96,7 @@ func (notifier *smtpNotifier) pushNotification(msgString string, title string) e
 		return err
 	}
 
-	log.Debug("notifier.pushNotification: sent notification as smtp email")
+	log.Debug("smtpNotifier.pushNotification: sent notification as SMTP email")
 
 	return nil
 }

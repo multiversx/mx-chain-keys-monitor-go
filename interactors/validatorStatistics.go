@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/multiversx/mx-chain-keys-monitor-go/core"
-
 	"github.com/multiversx/mx-chain-core-go/core/check"
+	"github.com/multiversx/mx-chain-keys-monitor-go/core"
 	logger "github.com/multiversx/mx-chain-logger-go"
 )
 
@@ -38,7 +37,7 @@ func (interactor *validatorStatisticsInteractor) Query(ctx context.Context) (map
 	if err != nil {
 		return nil, err
 	}
-	if !core.IsStatusCodeIs2xx(statusCode) {
+	if !core.IsHttpStatusCodeSuccess(statusCode) {
 		return nil, fmt.Errorf("%w, but %d", errReturnCodeIsNotOk, statusCode)
 	}
 
