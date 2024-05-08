@@ -30,6 +30,12 @@ type OutputMessage struct {
 	ProblemEncountered string
 }
 
+// IdentitiesHolder will hold all involved identities: wallet addresses or BLS keys
+type IdentitiesHolder struct {
+	Addresses  []Address
+	BlsHexKeys []string
+}
+
 // Address defines the address DTO with it's 2 representations
 type Address struct {
 	Hex    string
