@@ -26,8 +26,9 @@ type BLSKeysFetcher interface {
 
 // StatusHandler defines the operations of a component able to keep the status of the app
 type StatusHandler interface {
+	NotifyAppStart()
 	ErrorEncountered(err error)
-	ProblematicBLSKeysFound(messages []core.OutputMessage)
+	CollectKeysProblems(messages []core.OutputMessage)
 	Execute(ctx context.Context) error
 	SendCloseMessage()
 	IsInterfaceNil() bool

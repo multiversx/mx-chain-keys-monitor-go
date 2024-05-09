@@ -8,10 +8,18 @@ import (
 
 // StatusHandlerStub -
 type StatusHandlerStub struct {
-	ErrorEncounteredHandler        func(err error)
-	ProblematicBLSKeysFoundHandler func(messages []core.OutputMessage)
-	ExecuteHandler                 func(ctx context.Context) error
-	SendCloseMessageHandler        func()
+	NotifyAppStartHandler      func()
+	ErrorEncounteredHandler    func(err error)
+	CollectKeysProblemsHandler func(messages []core.OutputMessage)
+	ExecuteHandler             func(ctx context.Context) error
+	SendCloseMessageHandler    func()
+}
+
+// NotifyAppStart -
+func (stub *StatusHandlerStub) NotifyAppStart() {
+	if stub.NotifyAppStartHandler != nil {
+		stub.NotifyAppStartHandler()
+	}
 }
 
 // ErrorEncountered -
@@ -21,10 +29,10 @@ func (stub *StatusHandlerStub) ErrorEncountered(err error) {
 	}
 }
 
-// ProblematicBLSKeysFound -
-func (stub *StatusHandlerStub) ProblematicBLSKeysFound(messages []core.OutputMessage) {
-	if stub.ProblematicBLSKeysFoundHandler != nil {
-		stub.ProblematicBLSKeysFoundHandler(messages)
+// CollectKeysProblems -
+func (stub *StatusHandlerStub) CollectKeysProblems(messages []core.OutputMessage) {
+	if stub.CollectKeysProblemsHandler != nil {
+		stub.CollectKeysProblemsHandler(messages)
 	}
 }
 

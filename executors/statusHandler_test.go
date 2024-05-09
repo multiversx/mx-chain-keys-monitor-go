@@ -28,29 +28,33 @@ func TestNewStatusHandler(t *testing.T) {
 		assert.NotNil(t, handler)
 		assert.Nil(t, err)
 	})
-	t.Run("should notify at startup", func(t *testing.T) {
-		t.Parallel()
+}
 
-		sentMessages := make([]core.OutputMessage, 0)
-		notifier1 := &mock.OutputNotifierStub{
-			OutputMessagesHandler: func(messages ...core.OutputMessage) {
-				sentMessages = append(sentMessages, messages...)
-			},
-		}
-		notifier2 := &mock.OutputNotifierStub{
-			OutputMessagesHandler: func(messages ...core.OutputMessage) {
-				sentMessages = append(sentMessages, messages...)
-			},
-		}
+func TestStatusHandler_NotifyAppStart(t *testing.T) {
+	t.Parallel()
 
-		_, _ = NewStatusHandler("app", []OutputNotifier{notifier1, notifier2})
+	sentMessages := make([]core.OutputMessage, 0)
+	notifier1 := &mock.OutputNotifierStub{
+		OutputMessagesHandler: func(messages ...core.OutputMessage) {
+			sentMessages = append(sentMessages, messages...)
+		},
+	}
+	notifier2 := &mock.OutputNotifierStub{
+		OutputMessagesHandler: func(messages ...core.OutputMessage) {
+			sentMessages = append(sentMessages, messages...)
+		},
+	}
 
-		assert.Equal(t, 2, len(sentMessages))
-		assert.Equal(t, sentMessages[0], sentMessages[1])
-		assert.Equal(t, "app", sentMessages[0].ExecutorName)
-		assert.Equal(t, core.InfoMessageOutputType, sentMessages[0].Type)
-		assert.Contains(t, sentMessages[0].IdentifierType, "Application started on")
-	})
+	handler, _ := NewStatusHandler("app", []OutputNotifier{notifier1, notifier2})
+	assert.Equal(t, 0, len(sentMessages)) // should not notify at startup
+
+	handler.NotifyAppStart()
+
+	assert.Equal(t, 2, len(sentMessages))
+	assert.Equal(t, sentMessages[0], sentMessages[1])
+	assert.Equal(t, "app", sentMessages[0].ExecutorName)
+	assert.Equal(t, core.InfoMessageOutputType, sentMessages[0].Type)
+	assert.Contains(t, sentMessages[0].IdentifierType, "Application started on")
 }
 
 func TestStatusHandler_IsInterfaceNil(t *testing.T) {
@@ -130,10 +134,10 @@ func TestStatusHandler_Execute(t *testing.T) {
 			Identifier: "bls2",
 		}
 
-		notifier.ProblematicBLSKeysFound([]core.OutputMessage{key2})
-		notifier.ProblematicBLSKeysFound([]core.OutputMessage{key1, key2})
-		notifier.ProblematicBLSKeysFound([]core.OutputMessage{key1})
-		notifier.ProblematicBLSKeysFound(nil)
+		notifier.CollectKeysProblems([]core.OutputMessage{key2})
+		notifier.CollectKeysProblems([]core.OutputMessage{key1, key2})
+		notifier.CollectKeysProblems([]core.OutputMessage{key1})
+		notifier.CollectKeysProblems(nil)
 
 		err := notifier.Execute(context.Background())
 		assert.Nil(t, err)

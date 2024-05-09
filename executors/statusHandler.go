@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/multiversx/mx-chain-core-go/core/check"
@@ -13,7 +14,7 @@ import (
 type statusHandler struct {
 	name            string
 	mut             sync.Mutex
-	numErrors       int
+	numErrors       uint32
 	problematicKeys map[string]struct{}
 	notifiers       []OutputNotifier
 }
@@ -32,12 +33,11 @@ func NewStatusHandler(name string, notifiers []OutputNotifier) (*statusHandler, 
 		problematicKeys: make(map[string]struct{}),
 	}
 
-	handler.notifyAppStart()
-
 	return handler, nil
 }
 
-func (handler *statusHandler) notifyAppStart() {
+// NotifyAppStart will send a message on all notifiers stating that the application was started
+func (handler *statusHandler) NotifyAppStart() {
 	msg := core.OutputMessage{
 		Type:           core.InfoMessageOutputType,
 		ExecutorName:   handler.name,
@@ -57,13 +57,11 @@ func (handler *statusHandler) ErrorEncountered(err error) {
 
 	log.LogIfError(err)
 
-	handler.mut.Lock()
-	handler.numErrors++
-	handler.mut.Unlock()
+	atomic.AddUint32(&handler.numErrors, 1)
 }
 
-// ProblematicBLSKeysFound will record the problem on the BLS keys so the periodic report will include the number of identity failures
-func (handler *statusHandler) ProblematicBLSKeysFound(messages []core.OutputMessage) {
+// CollectKeysProblems will record the problem on the BLS keys so the periodic report will include the number of identity failures
+func (handler *statusHandler) CollectKeysProblems(messages []core.OutputMessage) {
 	handler.mut.Lock()
 	for _, msg := range messages {
 		handler.problematicKeys[msg.Identifier] = struct{}{}
@@ -74,8 +72,7 @@ func (handler *statusHandler) ProblematicBLSKeysFound(messages []core.OutputMess
 // Execute will push the notification messages and will clear the internal state of the status handler
 func (handler *statusHandler) Execute(_ context.Context) error {
 	handler.mut.Lock()
-	numErrors := handler.numErrors
-	handler.numErrors = 0
+	numErrors := atomic.SwapUint32(&handler.numErrors, 0)
 
 	numProblematicKeys := len(handler.problematicKeys)
 	handler.problematicKeys = make(map[string]struct{})
@@ -93,7 +90,7 @@ func (handler *statusHandler) Execute(_ context.Context) error {
 	return nil
 }
 
-func (handler *statusHandler) createErrorsMessage(numErrors int) core.OutputMessage {
+func (handler *statusHandler) createErrorsMessage(numErrors uint32) core.OutputMessage {
 	msg := core.OutputMessage{
 		Type:           core.InfoMessageOutputType,
 		ExecutorName:   handler.name,

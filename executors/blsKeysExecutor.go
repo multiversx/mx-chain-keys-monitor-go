@@ -130,7 +130,7 @@ func (executor *blsKeysExecutor) createMessages(problematicKeys []core.CheckResp
 func (executor *blsKeysExecutor) notify(messages []core.OutputMessage) {
 	log.Debug("blsKeysExecutor.notify", "executor", executor.name, "num messages", len(messages))
 
-	executor.statusHandler.ProblematicBLSKeysFound(messages)
+	executor.statusHandler.CollectKeysProblems(messages)
 	for _, notifier := range executor.notifiers {
 		notifier.OutputMessages(messages...)
 	}
