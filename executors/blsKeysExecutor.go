@@ -12,6 +12,8 @@ import (
 
 const identifierType = "BLS key"
 const explorerURLNodesPathName = "nodes"
+const numPrefixCharactersForKey = 6
+const numSuffixCharactersForKey = 6
 
 var log = logger.GetOrCreate("executors")
 
@@ -135,11 +137,13 @@ func (executor *blsKeysExecutor) notify(messages []core.OutputMessage) {
 }
 
 func shortIdentifier(identifier string) string {
-	if len(identifier) <= 15 {
+	ellipsisString := "..."
+	minNumCharactersToTrim := numPrefixCharactersForKey + len(ellipsisString) + numSuffixCharactersForKey
+	if len(identifier) <= minNumCharactersToTrim {
 		return identifier
 	}
 
-	return identifier[:6] + "..." + identifier[len(identifier)-6:]
+	return identifier[:numPrefixCharactersForKey] + ellipsisString + identifier[len(identifier)-numSuffixCharactersForKey:]
 }
 
 func (executor *blsKeysExecutor) createIdentifierURL(hexKey string) string {
