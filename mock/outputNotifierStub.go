@@ -6,14 +6,26 @@ import (
 
 // OutputNotifierStub -
 type OutputNotifierStub struct {
-	OutputMessagesHandler func(messages ...core.OutputMessage)
+	NameHandler           func() string
+	OutputMessagesHandler func(messages ...core.OutputMessage) error
 }
 
 // OutputMessages -
-func (stub *OutputNotifierStub) OutputMessages(messages ...core.OutputMessage) {
+func (stub *OutputNotifierStub) OutputMessages(messages ...core.OutputMessage) error {
 	if stub.OutputMessagesHandler != nil {
-		stub.OutputMessagesHandler(messages...)
+		return stub.OutputMessagesHandler(messages...)
 	}
+
+	return nil
+}
+
+// Name -
+func (stub *OutputNotifierStub) Name() string {
+	if stub.NameHandler != nil {
+		return stub.NameHandler()
+	}
+
+	return ""
 }
 
 // IsInterfaceNil -

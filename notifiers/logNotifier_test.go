@@ -38,6 +38,13 @@ func TestLogNotifier_IsInterfaceNil(t *testing.T) {
 	assert.False(t, notifier.IsInterfaceNil())
 }
 
+func TestLogNotifier_Name(t *testing.T) {
+	t.Parallel()
+
+	notifier, _ := NewLogNotifier(&mock.LoggerStub{})
+	assert.Equal(t, "*notifiers.logNotifier", notifier.Name())
+}
+
 func TestLogNotifier_OutputErrorMessages(t *testing.T) {
 	t.Parallel()
 
@@ -73,7 +80,8 @@ func TestLogNotifier_OutputErrorMessages(t *testing.T) {
 		ProblemEncountered: "Rating drop detected: temp rating: 90.70, rating: 100.00",
 	}
 
-	notifier.OutputMessages(message1, message2, message3)
+	err := notifier.OutputMessages(message1, message2, message3)
+	assert.Nil(t, err)
 
 	expectedMap := map[string]logger.LogLevel{
 		"BLS key 0295e29aef11c30391a70c35781 -> Rating drop detected: temp rating: 90.70, rating: 100.00 called by test executor": logger.LogError,

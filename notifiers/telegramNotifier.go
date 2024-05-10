@@ -25,10 +25,10 @@ func NewTelegramNotifier(url string, token string, chatID string) *telegramNotif
 }
 
 // OutputMessages will push the provided messages as error
-func (notifier *telegramNotifier) OutputMessages(messages ...core.OutputMessage) {
+func (notifier *telegramNotifier) OutputMessages(messages ...core.OutputMessage) error {
 	log.Debug("telegramNotifier.OutputMessages sending messages", "num messages", len(messages))
 	if len(messages) == 0 {
-		return
+		return nil
 	}
 
 	msgString := ""
@@ -45,8 +45,10 @@ func (notifier *telegramNotifier) OutputMessages(messages ...core.OutputMessage)
 
 	err := notifier.pushNotification(msgString, title)
 	if err != nil {
-		log.Error("telegramNotifier.OutputMessages: error sending notification", "error", err)
+		return fmt.Errorf("%w in telegramNotifier.OutputMessages", err)
 	}
+
+	return nil
 }
 
 func (notifier *telegramNotifier) pushNotification(msgString string, title string) error {
@@ -72,6 +74,11 @@ func (notifier *telegramNotifier) pushNotification(msgString string, title strin
 		"status", statusCode)
 
 	return nil
+}
+
+// Name returns the name of the notifier
+func (notifier *telegramNotifier) Name() string {
+	return fmt.Sprintf("%T", notifier)
 }
 
 // IsInterfaceNil returns true if there is no value under the interface

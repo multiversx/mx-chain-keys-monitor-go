@@ -36,7 +36,14 @@ type StatusHandler interface {
 
 // OutputNotifier defines the operations supported by an output notifier instance
 type OutputNotifier interface {
-	OutputMessages(messages ...core.OutputMessage)
+	OutputMessages(messages ...core.OutputMessage) error
+	Name() string
+	IsInterfaceNil() bool
+}
+
+// OutputNotifiersHandler defines the behavior of a component that is able to notify all notifiers
+type OutputNotifiersHandler interface {
+	NotifyWithRetry(caller string, messages ...core.OutputMessage)
 	IsInterfaceNil() bool
 }
 

@@ -13,18 +13,17 @@ import (
 func TestNewStatusHandler(t *testing.T) {
 	t.Parallel()
 
-	t.Run("nil notifier should error", func(t *testing.T) {
+	t.Run("nil notifiers handler should error", func(t *testing.T) {
 		t.Parallel()
 
-		handler, err := NewStatusHandler("app", []OutputNotifier{&mock.OutputNotifierStub{}, nil})
+		handler, err := NewStatusHandler("app", nil)
 		assert.Nil(t, handler)
-		assert.ErrorIs(t, err, errNilOutputNotifier)
-		assert.Contains(t, err.Error(), "at index 1")
+		assert.Equal(t, errNilOutputNotifiersHandler, err)
 	})
 	t.Run("should work", func(t *testing.T) {
 		t.Parallel()
 
-		handler, err := NewStatusHandler("app", []OutputNotifier{&mock.OutputNotifierStub{}, &mock.OutputNotifierStub{}})
+		handler, err := NewStatusHandler("app", &mock.OutputNotifiersHandlerStub{})
 		assert.NotNil(t, handler)
 		assert.Nil(t, err)
 	})
@@ -34,24 +33,18 @@ func TestStatusHandler_NotifyAppStart(t *testing.T) {
 	t.Parallel()
 
 	sentMessages := make([]core.OutputMessage, 0)
-	notifier1 := &mock.OutputNotifierStub{
-		OutputMessagesHandler: func(messages ...core.OutputMessage) {
-			sentMessages = append(sentMessages, messages...)
-		},
-	}
-	notifier2 := &mock.OutputNotifierStub{
-		OutputMessagesHandler: func(messages ...core.OutputMessage) {
+	outputNotifiersHandler := &mock.OutputNotifiersHandlerStub{
+		NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
 			sentMessages = append(sentMessages, messages...)
 		},
 	}
 
-	handler, _ := NewStatusHandler("app", []OutputNotifier{notifier1, notifier2})
+	handler, _ := NewStatusHandler("app", outputNotifiersHandler)
 	assert.Equal(t, 0, len(sentMessages)) // should not notify at startup
 
 	handler.NotifyAppStart()
 
-	assert.Equal(t, 2, len(sentMessages))
-	assert.Equal(t, sentMessages[0], sentMessages[1])
+	assert.Equal(t, 1, len(sentMessages))
 	assert.Equal(t, "app", sentMessages[0].ExecutorName)
 	assert.Equal(t, core.InfoMessageOutputType, sentMessages[0].Type)
 	assert.Contains(t, sentMessages[0].IdentifierType, "Application started on")
@@ -71,18 +64,13 @@ func TestStatusHandler_Execute(t *testing.T) {
 	t.Parallel()
 
 	sentMessages := make([]core.OutputMessage, 0)
-	notifier1 := &mock.OutputNotifierStub{
-		OutputMessagesHandler: func(messages ...core.OutputMessage) {
-			sentMessages = append(sentMessages, messages...)
-		},
-	}
-	notifier2 := &mock.OutputNotifierStub{
-		OutputMessagesHandler: func(messages ...core.OutputMessage) {
+	outputNotifiersHandler := &mock.OutputNotifiersHandlerStub{
+		NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
 			sentMessages = append(sentMessages, messages...)
 		},
 	}
 
-	notifier, _ := NewStatusHandler("app", []OutputNotifier{notifier1, notifier2})
+	notifier, _ := NewStatusHandler("app", outputNotifiersHandler)
 	sentMessages = make([]core.OutputMessage, 0) // reset the constructor sent messages
 
 	t.Run("empty state should return info messages", func(t *testing.T) {
@@ -100,7 +88,7 @@ func TestStatusHandler_Execute(t *testing.T) {
 			ExecutorName:   "app",
 		}
 
-		assert.Equal(t, []core.OutputMessage{expectedMessageErr, expectedMessageKeys, expectedMessageErr, expectedMessageKeys}, sentMessages)
+		assert.Equal(t, []core.OutputMessage{expectedMessageErr, expectedMessageKeys}, sentMessages)
 
 		sentMessages = make([]core.OutputMessage, 0)
 	})
@@ -122,7 +110,7 @@ func TestStatusHandler_Execute(t *testing.T) {
 			ExecutorName:   "app",
 		}
 
-		assert.Equal(t, []core.OutputMessage{expectedMessageErr, expectedMessageKeys, expectedMessageErr, expectedMessageKeys}, sentMessages)
+		assert.Equal(t, []core.OutputMessage{expectedMessageErr, expectedMessageKeys}, sentMessages)
 
 		sentMessages = make([]core.OutputMessage, 0)
 	})
@@ -153,7 +141,7 @@ func TestStatusHandler_Execute(t *testing.T) {
 			ExecutorName:    "app",
 		}
 
-		assert.Equal(t, []core.OutputMessage{expectedMessageErr, expectedMessageKeys, expectedMessageErr, expectedMessageKeys}, sentMessages)
+		assert.Equal(t, []core.OutputMessage{expectedMessageErr, expectedMessageKeys}, sentMessages)
 
 		sentMessages = make([]core.OutputMessage, 0)
 	})
@@ -172,7 +160,7 @@ func TestStatusHandler_Execute(t *testing.T) {
 			ExecutorName:   "app",
 		}
 
-		assert.Equal(t, []core.OutputMessage{expectedMessageErr, expectedMessageKeys, expectedMessageErr, expectedMessageKeys}, sentMessages)
+		assert.Equal(t, []core.OutputMessage{expectedMessageErr, expectedMessageKeys}, sentMessages)
 
 		sentMessages = make([]core.OutputMessage, 0)
 	})
@@ -182,18 +170,13 @@ func TestStatusHandler_SendCloseMessage(t *testing.T) {
 	t.Parallel()
 
 	sentMessages := make([]core.OutputMessage, 0)
-	notifier1 := &mock.OutputNotifierStub{
-		OutputMessagesHandler: func(messages ...core.OutputMessage) {
-			sentMessages = append(sentMessages, messages...)
-		},
-	}
-	notifier2 := &mock.OutputNotifierStub{
-		OutputMessagesHandler: func(messages ...core.OutputMessage) {
+	outputNotifiersHandler := &mock.OutputNotifiersHandlerStub{
+		NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
 			sentMessages = append(sentMessages, messages...)
 		},
 	}
 
-	notifier, _ := NewStatusHandler("app", []OutputNotifier{notifier1, notifier2})
+	notifier, _ := NewStatusHandler("app", outputNotifiersHandler)
 	sentMessages = make([]core.OutputMessage, 0) // reset the constructor sent messages
 
 	notifier.SendCloseMessage()
@@ -204,5 +187,5 @@ func TestStatusHandler_SendCloseMessage(t *testing.T) {
 		ExecutorName:    "app",
 	}
 
-	assert.Equal(t, []core.OutputMessage{expectedMessage, expectedMessage}, sentMessages)
+	assert.Equal(t, []core.OutputMessage{expectedMessage}, sentMessages)
 }

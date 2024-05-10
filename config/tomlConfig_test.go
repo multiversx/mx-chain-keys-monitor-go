@@ -26,6 +26,9 @@ func TestLoadConfig(t *testing.T) {
 
 
 [OutputNotifiers]
+    NumRetries = 3
+    SecondsBetweenRetries = 10
+
     # Uses Pushover service that can notify Desktop, Android or iOS devices. Requires a valid subscription.
     # If you enable this notifier, remember to specify the credentials in credentials.toml file
     [OutputNotifiers.Pushover]
@@ -75,6 +78,8 @@ func TestLoadConfig(t *testing.T) {
 			},
 		},
 		OutputNotifiers: OutputNotifiersConfig{
+			NumRetries:            3,
+			SecondsBetweenRetries: 10,
 			Pushover: PushoverNotifierConfig{
 				Enabled: true,
 				URL:     "https://api.pushover.net/1/messages.json",
