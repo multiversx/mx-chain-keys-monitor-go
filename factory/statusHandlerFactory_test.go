@@ -99,38 +99,38 @@ func TestCreateStatusHandler(t *testing.T) {
 	})
 }
 
-func TestConvertStringToDayOfWeek(t *testing.T) {
+func TestParseWeekday(t *testing.T) {
 	t.Parallel()
 
-	dow, err := convertStringToDayOfWeek("eVeRy DaY")
+	dow, err := parseWeekday("eVeRy DaY")
 	assert.Equal(t, core.EveryWeekDay, dow)
 	assert.Nil(t, err)
 
-	dow, err = convertStringToDayOfWeek("MoNdAy")
+	dow, err = parseWeekday("MoNdAy")
 	assert.Equal(t, time.Monday, dow)
 	assert.Nil(t, err)
 
-	dow, err = convertStringToDayOfWeek("TuEsDaY")
+	dow, err = parseWeekday("TuEsDaY")
 	assert.Equal(t, time.Tuesday, dow)
 	assert.Nil(t, err)
 
-	dow, err = convertStringToDayOfWeek("WeDnEsDaY")
+	dow, err = parseWeekday("WeDnEsDaY")
 	assert.Equal(t, time.Wednesday, dow)
 	assert.Nil(t, err)
 
-	dow, err = convertStringToDayOfWeek("ThUrSdAy")
+	dow, err = parseWeekday("ThUrSdAy")
 	assert.Equal(t, time.Thursday, dow)
 	assert.Nil(t, err)
 
-	dow, err = convertStringToDayOfWeek("FrIdAy")
+	dow, err = parseWeekday("FrIdAy")
 	assert.Equal(t, time.Friday, dow)
 	assert.Nil(t, err)
 
-	dow, err = convertStringToDayOfWeek("SaTuRdAy")
+	dow, err = parseWeekday("SaTuRdAy")
 	assert.Equal(t, time.Saturday, dow)
 	assert.Nil(t, err)
 
-	dow, err = convertStringToDayOfWeek("SuNdAy")
+	dow, err = parseWeekday("SuNdAy")
 	assert.Equal(t, time.Sunday, dow)
 	assert.Nil(t, err)
 }

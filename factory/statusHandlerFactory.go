@@ -13,6 +13,8 @@ import (
 	"github.com/multiversx/mx-sdk-go/core/polling"
 )
 
+const unknownWeekDay = -2
+
 // CreateStatusHandler will create an instance of type executors.StatusHandler and an instance of io.Closer (the polling component)
 func CreateStatusHandler(
 	generalConfig config.GeneralConfigs,
@@ -27,7 +29,7 @@ func CreateStatusHandler(
 		return nil, nil, err
 	}
 
-	dayOfWeek, err := convertStringToDayOfWeek(generalConfig.SystemSelfCheck.DayOfWeek)
+	dayOfWeek, err := parseWeekday(generalConfig.SystemSelfCheck.DayOfWeek)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -61,7 +63,7 @@ func CreateStatusHandler(
 	return statusHandler, pollingHandler, pollingHandler.StartProcessingLoop()
 }
 
-func convertStringToDayOfWeek(dayOfWeek string) (time.Weekday, error) {
+func parseWeekday(dayOfWeek string) (time.Weekday, error) {
 	dayOfWeek = strings.ToLower(dayOfWeek)
 	switch dayOfWeek {
 	case "every day":
@@ -82,5 +84,5 @@ func convertStringToDayOfWeek(dayOfWeek string) (time.Weekday, error) {
 		return time.Sunday, nil
 	}
 
-	return -2, fmt.Errorf("unknown day of week %s", dayOfWeek)
+	return unknownWeekDay, fmt.Errorf("unknown day of week %s", dayOfWeek)
 }
