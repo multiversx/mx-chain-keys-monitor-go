@@ -29,6 +29,13 @@ func TestSmtpNotifier_IsInterfaceNil(t *testing.T) {
 	assert.False(t, instance.IsInterfaceNil())
 }
 
+func TestSmtpNotifier_Name(t *testing.T) {
+	t.Parallel()
+
+	notifier := NewSmtpNotifier(ArgsSmtpNotifier{})
+	assert.Equal(t, "*notifiers.smtpNotifier", notifier.Name())
+}
+
 func TestSmtpNotifier_OutputMessages(t *testing.T) {
 	testArgs := ArgsSmtpNotifier{
 		To:       "to@email.com",
@@ -48,7 +55,8 @@ func TestSmtpNotifier_OutputMessages(t *testing.T) {
 
 			return nil
 		}
-		notifier.OutputMessages()
+		err := notifier.OutputMessages()
+		assert.Nil(t, err)
 	})
 	t.Run("send mail function fails, should error", func(t *testing.T) {
 		t.Parallel()
@@ -57,7 +65,7 @@ func TestSmtpNotifier_OutputMessages(t *testing.T) {
 		notifier.sendMail = func(host string, auth smtp.Auth, from string, to []string, msgBytes []byte) error {
 			return expectedErr
 		}
-		err := notifier.pushNotification("test", "title")
+		err := notifier.OutputMessages(testInfoMessage)
 		assert.NotNil(t, err)
 		assert.ErrorIs(t, err, expectedErr)
 	})
@@ -114,7 +122,8 @@ Content-Type: text/html; charset="UTF-8";
 
 			return nil
 		}
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 		assert.Equal(t, expectedBody, string(sentMsgBytes))
 	})
 	t.Run("sending info messages and warn messages should work", func(t *testing.T) {
@@ -171,7 +180,8 @@ Content-Type: text/html; charset="UTF-8";
 
 			return nil
 		}
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 		assert.Equal(t, expectedBody, string(sentMsgBytes))
 	})
 	t.Run("sending info, warn and error messages should work", func(t *testing.T) {
@@ -228,7 +238,8 @@ Content-Type: text/html; charset="UTF-8";
 
 			return nil
 		}
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 		assert.Equal(t, expectedBody, string(sentMsgBytes))
 	})
 	t.Run("sending unknown type of messages should work", func(t *testing.T) {
@@ -285,19 +296,18 @@ Content-Type: text/html; charset="UTF-8";
 
 			return nil
 		}
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 		assert.Equal(t, expectedBody, string(sentMsgBytes))
 	})
 }
 
 func TestSmtpNotifier_FunctionalTest(t *testing.T) {
-	// before running this test, please define your environment variables SMTP_TO, SMTP_FROM and SMTP_PASSWORD so this test can work
-
 	smtpTo := os.Getenv("SMTP_TO")
 	smtpFrom := os.Getenv("SMTP_FROM")
 	smtpPassword := os.Getenv("SMTP_PASSWORD")
 	if len(smtpTo) == 0 || len(smtpFrom) == 0 || len(smtpPassword) == 0 {
-		t.Skip("this is a functional test, will need real credentials")
+		t.Skip("this is a functional test, will need real credentials. Please define your environment variables SMTP_TO, SMTP_FROM and SMTP_PASSWORD so this test can work")
 	}
 
 	_ = logger.SetLogLevel("*:DEBUG")
@@ -323,8 +333,8 @@ func TestSmtpNotifier_FunctionalTest(t *testing.T) {
 			ShortIdentifier: "this is a bold info line",
 			ExecutorName:    "Keys monitoring app",
 		}
-		notifier.OutputMessages(message1, message2)
-
+		err := notifier.OutputMessages(message1, message2)
+		assert.Nil(t, err)
 	})
 	t.Run("info and warn messages", func(t *testing.T) {
 		message1 := core.OutputMessage{
@@ -342,7 +352,8 @@ func TestSmtpNotifier_FunctionalTest(t *testing.T) {
 			ShortIdentifier: "internal app errors occurred: 45",
 			ExecutorName:    "Keys monitoring app",
 		}
-		notifier.OutputMessages(message1, message2, message3)
+		err := notifier.OutputMessages(message1, message2, message3)
+		assert.Nil(t, err)
 	})
 	t.Run("error messages", func(t *testing.T) {
 		message1 := core.OutputMessage{
@@ -363,6 +374,7 @@ func TestSmtpNotifier_FunctionalTest(t *testing.T) {
 			ExecutorName:       "testnet - set 1",
 			ProblemEncountered: "Rating drop detected: temp rating: 95.37, rating: 100.00",
 		}
-		notifier.OutputMessages(message1, message2)
+		err := notifier.OutputMessages(message1, message2)
+		assert.Nil(t, err)
 	})
 }

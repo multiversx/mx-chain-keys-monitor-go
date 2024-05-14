@@ -25,10 +25,12 @@ func NewLogNotifier(log logger.Logger) (*logNotifier, error) {
 }
 
 // OutputMessages will send the output messages to the current logger
-func (notifier *logNotifier) OutputMessages(messages ...core.OutputMessage) {
+func (notifier *logNotifier) OutputMessages(messages ...core.OutputMessage) error {
 	for _, msg := range messages {
 		notifier.output(msg)
 	}
+
+	return nil
 }
 
 func (notifier *logNotifier) output(message core.OutputMessage) {
@@ -63,6 +65,11 @@ func composeMessage(message core.OutputMessage) string {
 	stringBuilder.WriteString(fmt.Sprintf("called by %s", message.ExecutorName))
 
 	return stringBuilder.String()
+}
+
+// Name returns the name of the notifier
+func (notifier *logNotifier) Name() string {
+	return fmt.Sprintf("%T", notifier)
 }
 
 // IsInterfaceNil returns true if there is no value under the interface

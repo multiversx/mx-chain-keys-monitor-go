@@ -17,6 +17,16 @@ import (
 const testToken = "test-token"
 const testUserKey = "test-user-key"
 
+var testInfoMessage = core.OutputMessage{
+	Type:               core.InfoMessageOutputType,
+	IdentifierType:     "info1",
+	ExecutorName:       "executor",
+	Identifier:         "info2",
+	ShortIdentifier:    "info3",
+	IdentifierURL:      "https://examples.com/info3",
+	ProblemEncountered: "problem1",
+}
+
 func createHttpTestServerThatRespondsOK(
 	t *testing.T,
 	expectedMessage string,
@@ -72,6 +82,13 @@ func TestPushoverNotifier_IsInterfaceNil(t *testing.T) {
 	assert.False(t, instance.IsInterfaceNil())
 }
 
+func TestPushoverNotifier_Name(t *testing.T) {
+	t.Parallel()
+
+	notifier := NewPushoverNotifier("url", "", "")
+	assert.Equal(t, "*notifiers.pushoverNotifier", notifier.Name())
+}
+
 func TestPushoverNotifier_OutputMessages(t *testing.T) {
 	t.Parallel()
 
@@ -85,7 +102,8 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
-		notifier.OutputMessages()
+		err := notifier.OutputMessages()
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(0), atomic.LoadUint32(&numCalls))
@@ -94,7 +112,7 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		t.Parallel()
 
 		notifier := NewPushoverNotifier("not-a-server-URL", "", "")
-		err := notifier.pushNotification("test", "title")
+		err := notifier.OutputMessages(testInfoMessage)
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "not-a-server-URL")
 	})
@@ -106,7 +124,7 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		}))
 
 		notifier := NewPushoverNotifier(testHttpServer.URL, "", "")
-		err := notifier.pushNotification("test", "title")
+		err := notifier.OutputMessages(testInfoMessage)
 		assert.ErrorIs(t, err, errReturnCodeIsNotOk)
 	})
 	t.Run("http post response is not OK, should error", func(t *testing.T) {
@@ -118,7 +136,7 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		}))
 
 		notifier := NewPushoverNotifier(testHttpServer.URL, "", "")
-		err := notifier.pushNotification("test", "title")
+		err := notifier.OutputMessages(testInfoMessage)
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "invalid character")
 
@@ -162,7 +180,8 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
@@ -204,7 +223,8 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
@@ -246,7 +266,8 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
@@ -288,7 +309,8 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
@@ -296,12 +318,10 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 }
 
 func TestPushoverNotifier_FunctionalTest(t *testing.T) {
-	// before running this test, please define your environment variables PUSHOVER_TOKEN and PUSHOVER_USERKEY so this test can work
-
 	pushoverToken := os.Getenv("PUSHOVER_TOKEN")
 	pushoverUserKey := os.Getenv("PUSHOVER_USERKEY")
 	if len(pushoverToken) == 0 || len(pushoverUserKey) == 0 {
-		t.Skip("this is a functional test, will need real credentials")
+		t.Skip("this is a functional test, will need real credentials. Please define your environment variables PUSHOVER_TOKEN and PUSHOVER_USERKEY so this test can work")
 	}
 
 	_ = logger.SetLogLevel("*:DEBUG")
@@ -323,8 +343,8 @@ func TestPushoverNotifier_FunctionalTest(t *testing.T) {
 			ShortIdentifier: "this is a bold info line",
 			ExecutorName:    "Keys monitoring app",
 		}
-		notifier.OutputMessages(message1, message2)
-
+		err := notifier.OutputMessages(message1, message2)
+		assert.Nil(t, err)
 	})
 	t.Run("info and warn messages", func(t *testing.T) {
 		message1 := core.OutputMessage{
@@ -342,7 +362,8 @@ func TestPushoverNotifier_FunctionalTest(t *testing.T) {
 			ShortIdentifier: "internal app errors occurred: 45",
 			ExecutorName:    "Keys monitoring app",
 		}
-		notifier.OutputMessages(message1, message2, message3)
+		err := notifier.OutputMessages(message1, message2, message3)
+		assert.Nil(t, err)
 	})
 	t.Run("error messages", func(t *testing.T) {
 		message1 := core.OutputMessage{
@@ -363,6 +384,7 @@ func TestPushoverNotifier_FunctionalTest(t *testing.T) {
 			ExecutorName:       "testnet - set 1",
 			ProblemEncountered: "Rating drop detected: temp rating: 95.37, rating: 100.00",
 		}
-		notifier.OutputMessages(message1, message2)
+		err := notifier.OutputMessages(message1, message2)
+		assert.Nil(t, err)
 	})
 }

@@ -44,10 +44,10 @@ func NewPushoverNotifier(url string, token string, userKey string) *pushoverNoti
 }
 
 // OutputMessages will send the provided messages to the Pushover service
-func (notifier *pushoverNotifier) OutputMessages(messages ...core.OutputMessage) {
+func (notifier *pushoverNotifier) OutputMessages(messages ...core.OutputMessage) error {
 	log.Debug("pushoverNotifier.OutputMessages sending messages", "num messages", len(messages))
 	if len(messages) == 0 {
-		return
+		return nil
 	}
 
 	msgString := ""
@@ -64,8 +64,10 @@ func (notifier *pushoverNotifier) OutputMessages(messages ...core.OutputMessage)
 
 	err := notifier.pushNotification(msgString, title)
 	if err != nil {
-		log.Error("pushoverNotifier.OutputMessages: error sending notification", "error", err)
+		return fmt.Errorf("%w in pushoverNotifier.OutputMessages", err)
 	}
+
+	return nil
 }
 
 func createMessageString(msg core.OutputMessage) string {
@@ -150,6 +152,11 @@ func (notifier *pushoverNotifier) pushNotification(msgString string, title strin
 		"status", resp.Status, "request ID", resp.Request)
 
 	return nil
+}
+
+// Name returns the name of the notifier
+func (notifier *pushoverNotifier) Name() string {
+	return fmt.Sprintf("%T", notifier)
 }
 
 // IsInterfaceNil returns true if there is no value under the interface

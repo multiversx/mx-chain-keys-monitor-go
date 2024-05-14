@@ -11,26 +11,26 @@ import (
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
 )
 
+const statusHandlerName = "statusHandler"
+
 type statusHandler struct {
-	name            string
-	mut             sync.Mutex
-	numErrors       uint32
-	problematicKeys map[string]struct{}
-	notifiers       []OutputNotifier
+	name             string
+	mut              sync.Mutex
+	numErrors        uint32
+	problematicKeys  map[string]struct{}
+	notifiersHandler OutputNotifiersHandler
 }
 
 // NewStatusHandler creates a new instance of type statusHandler
-func NewStatusHandler(name string, notifiers []OutputNotifier) (*statusHandler, error) {
-	for index, notifier := range notifiers {
-		if check.IfNil(notifier) {
-			return nil, fmt.Errorf("%w at index %d", errNilOutputNotifier, index)
-		}
+func NewStatusHandler(name string, notifiersHandler OutputNotifiersHandler) (*statusHandler, error) {
+	if check.IfNil(notifiersHandler) {
+		return nil, errNilOutputNotifiersHandler
 	}
 
 	handler := &statusHandler{
-		notifiers:       notifiers,
-		name:            name,
-		problematicKeys: make(map[string]struct{}),
+		notifiersHandler: notifiersHandler,
+		name:             name,
+		problematicKeys:  make(map[string]struct{}),
 	}
 
 	return handler, nil
@@ -44,8 +44,9 @@ func (handler *statusHandler) NotifyAppStart() {
 		IdentifierType: fmt.Sprintf("Application started on %s", time.Now().Format("01-02-2006 15:04:05")),
 	}
 
-	for _, notifier := range handler.notifiers {
-		notifier.OutputMessages(msg)
+	err := handler.notifiersHandler.NotifyWithRetry(statusHandlerName, msg)
+	if err != nil {
+		handler.ErrorEncountered(err)
 	}
 }
 
@@ -83,11 +84,7 @@ func (handler *statusHandler) Execute(_ context.Context) error {
 		handler.createProblematicKeysMessage(numProblematicKeys),
 	}
 
-	for _, notifier := range handler.notifiers {
-		notifier.OutputMessages(messages...)
-	}
-
-	return nil
+	return handler.notifiersHandler.NotifyWithRetry(statusHandlerName, messages...)
 }
 
 func (handler *statusHandler) createErrorsMessage(numErrors uint32) core.OutputMessage {
@@ -138,13 +135,10 @@ func (handler *statusHandler) createCloseMessage() core.OutputMessage {
 
 // SendCloseMessage will send to all notifiers a close message
 func (handler *statusHandler) SendCloseMessage() {
-	messages := []core.OutputMessage{
-		handler.createCloseMessage(),
-	}
+	closeMessage := handler.createCloseMessage()
 
-	for _, notifier := range handler.notifiers {
-		notifier.OutputMessages(messages...)
-	}
+	// nothing to do with the error here, the app is closing anyway, the error will be logged
+	_ = handler.notifiersHandler.NotifyWithRetry(statusHandlerName, closeMessage)
 }
 
 // IsInterfaceNil returns true if there is no value under the interface

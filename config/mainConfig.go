@@ -31,8 +31,10 @@ type LogsConfig struct {
 
 // OutputNotifiersConfig specifies the implemented types of output notifiers
 type OutputNotifiersConfig struct {
-	Pushover PushoverNotifierConfig
-	Smtp     SmtpNotifierConfig
+	NumRetries            uint32
+	SecondsBetweenRetries int
+	Pushover              PushoverNotifierConfig
+	Smtp                  SmtpNotifierConfig
 }
 
 // PushoverNotifierConfig specifies the options for the Pushover service

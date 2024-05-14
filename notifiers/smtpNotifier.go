@@ -53,10 +53,10 @@ func NewSmtpNotifier(args ArgsSmtpNotifier) *smtpNotifier {
 }
 
 // OutputMessages will push the provided messages as error
-func (notifier *smtpNotifier) OutputMessages(messages ...core.OutputMessage) {
+func (notifier *smtpNotifier) OutputMessages(messages ...core.OutputMessage) error {
 	log.Debug("smtpNotifier.OutputMessages sending messages", "num messages", len(messages))
 	if len(messages) == 0 {
-		return
+		return nil
 	}
 
 	msgString := ""
@@ -73,8 +73,10 @@ func (notifier *smtpNotifier) OutputMessages(messages ...core.OutputMessage) {
 
 	err := notifier.pushNotification(msgString, title)
 	if err != nil {
-		log.Error("smtpNotifier.OutputMessages: error sending notification", "error", err)
+		return fmt.Errorf("%w in smtpNotifier.OutputMessages", err)
 	}
+
+	return nil
 }
 
 func (notifier *smtpNotifier) pushNotification(msgString string, title string) error {
@@ -125,6 +127,11 @@ func createEmailBytes(msg string, title string) ([]byte, error) {
 	}
 
 	return body.Bytes(), nil
+}
+
+// Name returns the name of the notifier
+func (notifier *smtpNotifier) Name() string {
+	return fmt.Sprintf("%T", notifier)
 }
 
 // IsInterfaceNil returns true if there is no value under the interface

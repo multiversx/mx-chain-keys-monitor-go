@@ -54,6 +54,13 @@ func TestTelegramNotifier_IsInterfaceNil(t *testing.T) {
 	assert.False(t, instance.IsInterfaceNil())
 }
 
+func TestTelegramNotifier_Name(t *testing.T) {
+	t.Parallel()
+
+	notifier := NewTelegramNotifier("url", "", "")
+	assert.Equal(t, "*notifiers.telegramNotifier", notifier.Name())
+}
+
 func TestTelegramNotifier_OutputMessages(t *testing.T) {
 	t.Parallel()
 
@@ -67,7 +74,8 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
-		notifier.OutputMessages()
+		err := notifier.OutputMessages()
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(0), atomic.LoadUint32(&numCalls))
@@ -76,7 +84,7 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		t.Parallel()
 
 		notifier := NewTelegramNotifier("not-a-server-URL", "", "")
-		err := notifier.pushNotification("test", "title")
+		err := notifier.OutputMessages(testInfoMessage)
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "not-a-server-URL")
 	})
@@ -88,7 +96,7 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		}))
 
 		notifier := NewTelegramNotifier(testHttpServer.URL, "", "")
-		err := notifier.pushNotification("test", "title")
+		err := notifier.OutputMessages(testInfoMessage)
 		assert.ErrorIs(t, err, errReturnCodeIsNotOk)
 	})
 	t.Run("sending info messages should work", func(t *testing.T) {
@@ -128,7 +136,8 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
@@ -170,7 +179,8 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
@@ -212,7 +222,8 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
@@ -254,7 +265,8 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		defer testServer.Close()
 
 		notifier := NewTelegramNotifier(testServer.URL, testTelegramToken, testTelegramChatID)
-		notifier.OutputMessages(msg1, msg2, msg3)
+		err := notifier.OutputMessages(msg1, msg2, msg3)
+		assert.Nil(t, err)
 
 		time.Sleep(time.Second)
 		assert.Equal(t, uint32(1), atomic.LoadUint32(&numCalls))
@@ -262,12 +274,10 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 }
 
 func TestTelegramNotifier_FunctionalTest(t *testing.T) {
-	// before running this test, please define your environment variables TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID so this test can work
-
 	telegramBotToken := os.Getenv("TELEGRAM_BOT_TOKEN")
 	telegramChatID := os.Getenv("TELEGRAM_CHAT_ID")
 	if len(telegramChatID) == 0 || len(telegramBotToken) == 0 {
-		t.Skip("this is a functional test, will need real credentials")
+		t.Skip("this is a functional test, will need real credentials. Please define your environment variables TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID so this test can work")
 	}
 
 	_ = logger.SetLogLevel("*:DEBUG")
@@ -289,8 +299,8 @@ func TestTelegramNotifier_FunctionalTest(t *testing.T) {
 			ShortIdentifier: "this is a bold info line",
 			ExecutorName:    "Keys monitoring app",
 		}
-		notifier.OutputMessages(message1, message2)
-
+		err := notifier.OutputMessages(message1, message2)
+		assert.Nil(t, err)
 	})
 	t.Run("info and warn messages", func(t *testing.T) {
 		message1 := core.OutputMessage{
@@ -308,7 +318,8 @@ func TestTelegramNotifier_FunctionalTest(t *testing.T) {
 			ShortIdentifier: "internal app errors occurred: 45",
 			ExecutorName:    "Keys monitoring app",
 		}
-		notifier.OutputMessages(message1, message2, message3)
+		err := notifier.OutputMessages(message1, message2, message3)
+		assert.Nil(t, err)
 	})
 	t.Run("error messages", func(t *testing.T) {
 		message1 := core.OutputMessage{
@@ -329,6 +340,7 @@ func TestTelegramNotifier_FunctionalTest(t *testing.T) {
 			ExecutorName:       "testnet - set 1",
 			ProblemEncountered: "Rating drop detected: temp rating: 95.37, rating: 100.00",
 		}
-		notifier.OutputMessages(message1, message2)
+		err := notifier.OutputMessages(message1, message2)
+		assert.Nil(t, err)
 	})
 }

@@ -2,7 +2,6 @@ package executors
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 
 	"github.com/multiversx/mx-chain-core-go/core/check"
@@ -14,12 +13,13 @@ const identifierType = "BLS key"
 const explorerURLNodesPathName = "nodes"
 const numPrefixCharactersForKey = 6
 const numSuffixCharactersForKey = 6
+const blsExecutorName = "blsKeysExecutor"
 
 var log = logger.GetOrCreate("executors")
 
 type blsKeysExecutor struct {
-	notifiers                  []OutputNotifier
 	ratingsChecker             RatingsChecker
+	outputNotifiersHandler     OutputNotifiersHandler
 	blsKeysFetcher             BLSKeysFetcher
 	validatorStatisticsQuerier ValidatorStatisticsQuerier
 	statusHandler              StatusHandler
@@ -29,7 +29,7 @@ type blsKeysExecutor struct {
 
 // ArgsBLSKeysExecutor defines the DTO struct for the NewBLSKeysExecutor constructor function
 type ArgsBLSKeysExecutor struct {
-	Notifiers                  []OutputNotifier
+	OutputNotifiersHandler     OutputNotifiersHandler
 	RatingsChecker             RatingsChecker
 	ValidatorStatisticsQuerier ValidatorStatisticsQuerier
 	BlsKeysFetcher             BLSKeysFetcher
@@ -43,10 +43,8 @@ func NewBLSKeysExecutor(args ArgsBLSKeysExecutor) (*blsKeysExecutor, error) {
 	if check.IfNil(args.RatingsChecker) {
 		return nil, errNilRatingsChecker
 	}
-	for index, notifier := range args.Notifiers {
-		if check.IfNil(notifier) {
-			return nil, fmt.Errorf("%w at index %d", errNilOutputNotifier, index)
-		}
+	if check.IfNil(args.OutputNotifiersHandler) {
+		return nil, errNilOutputNotifiersHandler
 	}
 	if check.IfNil(args.ValidatorStatisticsQuerier) {
 		return nil, errNilValidatorStatisticsQuerier
@@ -59,7 +57,7 @@ func NewBLSKeysExecutor(args ArgsBLSKeysExecutor) (*blsKeysExecutor, error) {
 	}
 
 	return &blsKeysExecutor{
-		notifiers:                  args.Notifiers,
+		outputNotifiersHandler:     args.OutputNotifiersHandler,
 		ratingsChecker:             args.RatingsChecker,
 		validatorStatisticsQuerier: args.ValidatorStatisticsQuerier,
 		statusHandler:              args.StatusHandler,
@@ -103,9 +101,14 @@ func (executor *blsKeysExecutor) Execute(ctx context.Context) error {
 	}
 
 	messages := executor.createMessages(problematicKeys)
-	executor.notify(messages)
+	executor.statusHandler.CollectKeysProblems(messages)
+	err = executor.outputNotifiersHandler.NotifyWithRetry(blsExecutorName, messages...)
+	if err != nil {
+		log.Debug("blsKeysExecutor.Execute", "executor", executor.name, "error notifying", err.Error())
+		executor.statusHandler.ErrorEncountered(err)
+	}
 
-	return nil
+	return err
 }
 
 func (executor *blsKeysExecutor) createMessages(problematicKeys []core.CheckResponse) []core.OutputMessage {
@@ -125,15 +128,6 @@ func (executor *blsKeysExecutor) createMessages(problematicKeys []core.CheckResp
 	}
 
 	return result
-}
-
-func (executor *blsKeysExecutor) notify(messages []core.OutputMessage) {
-	log.Debug("blsKeysExecutor.notify", "executor", executor.name, "num messages", len(messages))
-
-	executor.statusHandler.CollectKeysProblems(messages)
-	for _, notifier := range executor.notifiers {
-		notifier.OutputMessages(messages...)
-	}
 }
 
 func shortIdentifier(identifier string) string {
