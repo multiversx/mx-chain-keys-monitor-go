@@ -107,9 +107,12 @@ func TestNotifiersHandler_NotifyWithRetry(t *testing.T) {
 		}
 		handler, _ := NewNotifiersHandler(testArgs)
 
-		handler.NotifyWithRetry("test")
-		handler.NotifyWithRetry("test", make([]core.OutputMessage, 0)...)
-		handler.NotifyWithRetry("test", testMessages...)
+		err := handler.NotifyWithRetry("test")
+		assert.Nil(t, err)
+		err = handler.NotifyWithRetry("test", make([]core.OutputMessage, 0)...)
+		assert.Nil(t, err)
+		err = handler.NotifyWithRetry("test", testMessages...)
+		assert.Nil(t, err)
 	})
 	t.Run("should not notify if no messages are to be sent", func(t *testing.T) {
 		resultMap := make(map[string][]core.OutputMessage)
@@ -138,8 +141,10 @@ func TestNotifiersHandler_NotifyWithRetry(t *testing.T) {
 		}
 		handler, _ := NewNotifiersHandler(testArgs)
 
-		handler.NotifyWithRetry("test")
-		handler.NotifyWithRetry("test", make([]core.OutputMessage, 0)...)
+		err := handler.NotifyWithRetry("test")
+		assert.Nil(t, err)
+		err = handler.NotifyWithRetry("test", make([]core.OutputMessage, 0)...)
+		assert.Nil(t, err)
 
 		assert.Equal(t, 0, len(resultMap))
 	})
@@ -169,7 +174,8 @@ func TestNotifiersHandler_NotifyWithRetry(t *testing.T) {
 			TimeBetweenRetries: minTimeBetweenRetries,
 		}
 		handler, _ := NewNotifiersHandler(testArgs)
-		handler.NotifyWithRetry("test", testMessages...)
+		err := handler.NotifyWithRetry("test", testMessages...)
+		assert.Nil(t, err)
 		assert.Equal(t, 2, len(resultMap))
 		assert.Equal(t, testMessages, resultMap["notifier1"])
 		assert.Equal(t, testMessages, resultMap["notifier2"])
@@ -200,7 +206,9 @@ func TestNotifiersHandler_NotifyWithRetry(t *testing.T) {
 			TimeBetweenRetries: minTimeBetweenRetries,
 		}
 		handler, _ := NewNotifiersHandler(testArgs)
-		handler.NotifyWithRetry("test", testMessages...)
+		err := handler.NotifyWithRetry("test", testMessages...)
+		assert.ErrorIs(t, err, errNotificationsSendingProblems)
+		assert.Contains(t, err.Error(), "num notifiers with problems: 1")
 		assert.Equal(t, 2, len(resultMap))
 		assert.Equal(t, testMessages, resultMap["notifier1"])
 		assert.Equal(t, testMessages, resultMap["notifier2"])
@@ -231,7 +239,9 @@ func TestNotifiersHandler_NotifyWithRetry(t *testing.T) {
 			TimeBetweenRetries: minTimeBetweenRetries,
 		}
 		handler, _ := NewNotifiersHandler(testArgs)
-		handler.NotifyWithRetry("test", testMessages...)
+		err := handler.NotifyWithRetry("test", testMessages...)
+		assert.ErrorIs(t, err, errNotificationsSendingProblems)
+		assert.Contains(t, err.Error(), "num notifiers with problems: 1")
 		assert.Equal(t, 2, len(resultMap))
 		assert.Equal(t, append(testMessages, testMessages...), resultMap["notifier1"])
 		assert.Equal(t, testMessages, resultMap["notifier2"])
@@ -262,7 +272,9 @@ func TestNotifiersHandler_NotifyWithRetry(t *testing.T) {
 			TimeBetweenRetries: minTimeBetweenRetries,
 		}
 		handler, _ := NewNotifiersHandler(testArgs)
-		handler.NotifyWithRetry("test", testMessages...)
+		err := handler.NotifyWithRetry("test", testMessages...)
+		assert.ErrorIs(t, err, errNotificationsSendingProblems)
+		assert.Contains(t, err.Error(), "num notifiers with problems: 2")
 		assert.Equal(t, 2, len(resultMap))
 		assert.Equal(t, append(testMessages, append(testMessages, testMessages...)...), resultMap["notifier1"])
 		assert.Equal(t, append(testMessages, append(testMessages, testMessages...)...), resultMap["notifier2"])
@@ -299,7 +311,8 @@ func TestNotifiersHandler_NotifyWithRetry(t *testing.T) {
 			TimeBetweenRetries: minTimeBetweenRetries,
 		}
 		handler, _ := NewNotifiersHandler(testArgs)
-		handler.NotifyWithRetry("test", testMessages...)
+		err := handler.NotifyWithRetry("test", testMessages...)
+		assert.Nil(t, err)
 		assert.Equal(t, 2, len(resultMap))
 		assert.Equal(t, append(testMessages, testMessages...), resultMap["notifier1"])
 		assert.Equal(t, testMessages, resultMap["notifier2"])
@@ -336,7 +349,8 @@ func TestNotifiersHandler_NotifyWithRetry(t *testing.T) {
 			TimeBetweenRetries: minTimeBetweenRetries,
 		}
 		handler, _ := NewNotifiersHandler(testArgs)
-		handler.NotifyWithRetry("test", testMessages...)
+		err := handler.NotifyWithRetry("test", testMessages...)
+		assert.Nil(t, err)
 		assert.Equal(t, 2, len(resultMap))
 		assert.Equal(t, append(testMessages, append(testMessages, testMessages...)...), resultMap["notifier1"])
 		assert.Equal(t, testMessages, resultMap["notifier2"])

@@ -15,4 +15,5 @@ var (
 	errInvalidHour                   = errors.New("invalid hour")
 	errInvalidMinute                 = errors.New("invalid minute")
 	errInvalidTimeBetweenRetries     = errors.New("invalid time between retries")
+	errNotificationsSendingProblems  = errors.New("notification sending problems")
 )

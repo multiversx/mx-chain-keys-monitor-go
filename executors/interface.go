@@ -43,7 +43,7 @@ type OutputNotifier interface {
 
 // OutputNotifiersHandler defines the behavior of a component that is able to notify all notifiers
 type OutputNotifiersHandler interface {
-	NotifyWithRetry(caller string, messages ...core.OutputMessage)
+	NotifyWithRetry(caller string, messages ...core.OutputMessage) error
 	IsInterfaceNil() bool
 }
 

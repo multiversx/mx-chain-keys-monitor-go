@@ -44,7 +44,10 @@ func (handler *statusHandler) NotifyAppStart() {
 		IdentifierType: fmt.Sprintf("Application started on %s", time.Now().Format("01-02-2006 15:04:05")),
 	}
 
-	handler.notifiersHandler.NotifyWithRetry(statusHandlerName, msg)
+	err := handler.notifiersHandler.NotifyWithRetry(statusHandlerName, msg)
+	if err != nil {
+		handler.ErrorEncountered(err)
+	}
 }
 
 // ErrorEncountered will log the error and record the number of errors encountered
@@ -81,9 +84,7 @@ func (handler *statusHandler) Execute(_ context.Context) error {
 		handler.createProblematicKeysMessage(numProblematicKeys),
 	}
 
-	handler.notifiersHandler.NotifyWithRetry(statusHandlerName, messages...)
-
-	return nil
+	return handler.notifiersHandler.NotifyWithRetry(statusHandlerName, messages...)
 }
 
 func (handler *statusHandler) createErrorsMessage(numErrors uint32) core.OutputMessage {
@@ -136,7 +137,8 @@ func (handler *statusHandler) createCloseMessage() core.OutputMessage {
 func (handler *statusHandler) SendCloseMessage() {
 	closeMessage := handler.createCloseMessage()
 
-	handler.notifiersHandler.NotifyWithRetry(statusHandlerName, closeMessage)
+	// nothing to do with the error here, the app is closing anyway, the error will be logged
+	_ = handler.notifiersHandler.NotifyWithRetry(statusHandlerName, closeMessage)
 }
 
 // IsInterfaceNil returns true if there is no value under the interface

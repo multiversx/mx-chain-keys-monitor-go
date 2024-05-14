@@ -32,22 +32,41 @@ func TestNewStatusHandler(t *testing.T) {
 func TestStatusHandler_NotifyAppStart(t *testing.T) {
 	t.Parallel()
 
+	var returnedErr error
 	sentMessages := make([]core.OutputMessage, 0)
 	outputNotifiersHandler := &mock.OutputNotifiersHandlerStub{
-		NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
+		NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
 			sentMessages = append(sentMessages, messages...)
+
+			return returnedErr
 		},
 	}
 
 	handler, _ := NewStatusHandler("app", outputNotifiersHandler)
 	assert.Equal(t, 0, len(sentMessages)) // should not notify at startup
 
-	handler.NotifyAppStart()
+	t.Run("notifiers handler does not error", func(t *testing.T) {
+		returnedErr = nil
 
-	assert.Equal(t, 1, len(sentMessages))
-	assert.Equal(t, "app", sentMessages[0].ExecutorName)
-	assert.Equal(t, core.InfoMessageOutputType, sentMessages[0].Type)
-	assert.Contains(t, sentMessages[0].IdentifierType, "Application started on")
+		handler.NotifyAppStart()
+
+		assert.Equal(t, 1, len(sentMessages))
+		assert.Equal(t, "app", sentMessages[0].ExecutorName)
+		assert.Equal(t, core.InfoMessageOutputType, sentMessages[0].Type)
+		assert.Contains(t, sentMessages[0].IdentifierType, "Application started on")
+		assert.Zero(t, handler.NumErrorsEncountered())
+	})
+	t.Run("notifiers handler errors", func(t *testing.T) {
+		returnedErr = errors.New("expected error")
+
+		handler.NotifyAppStart()
+
+		assert.Equal(t, 2, len(sentMessages))
+		assert.Equal(t, "app", sentMessages[0].ExecutorName)
+		assert.Equal(t, core.InfoMessageOutputType, sentMessages[0].Type)
+		assert.Contains(t, sentMessages[0].IdentifierType, "Application started on")
+		assert.Equal(t, uint32(1), handler.NumErrorsEncountered())
+	})
 }
 
 func TestStatusHandler_IsInterfaceNil(t *testing.T) {
@@ -65,8 +84,10 @@ func TestStatusHandler_Execute(t *testing.T) {
 
 	sentMessages := make([]core.OutputMessage, 0)
 	outputNotifiersHandler := &mock.OutputNotifiersHandlerStub{
-		NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
+		NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
 			sentMessages = append(sentMessages, messages...)
+
+			return nil
 		},
 	}
 
@@ -171,8 +192,10 @@ func TestStatusHandler_SendCloseMessage(t *testing.T) {
 
 	sentMessages := make([]core.OutputMessage, 0)
 	outputNotifiersHandler := &mock.OutputNotifiersHandlerStub{
-		NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
+		NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
 			sentMessages = append(sentMessages, messages...)
+
+			return nil
 		},
 	}
 

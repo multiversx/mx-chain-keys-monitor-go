@@ -6,14 +6,16 @@ import (
 
 // OutputNotifiersHandlerStub -
 type OutputNotifiersHandlerStub struct {
-	NotifyWithRetryHandler func(caller string, messages ...core.OutputMessage)
+	NotifyWithRetryHandler func(caller string, messages ...core.OutputMessage) error
 }
 
 // NotifyWithRetry -
-func (stub *OutputNotifiersHandlerStub) NotifyWithRetry(caller string, messages ...core.OutputMessage) {
+func (stub *OutputNotifiersHandlerStub) NotifyWithRetry(caller string, messages ...core.OutputMessage) error {
 	if stub.NotifyWithRetryHandler != nil {
-		stub.NotifyWithRetryHandler(caller, messages...)
+		return stub.NotifyWithRetryHandler(caller, messages...)
 	}
+
+	return nil
 }
 
 // IsInterfaceNil -

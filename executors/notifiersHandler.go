@@ -43,14 +43,14 @@ func NewNotifiersHandler(args ArgsNotifiersHandler) (*notifiersHandler, error) {
 
 // NotifyWithRetry will try to send the messages to the inner list of notifiers. If one or more notifiers errored, it will retry
 // for the maximum number of retries provided. There is a delay between the retries, to maximize the chances of recovery
-func (handler *notifiersHandler) NotifyWithRetry(caller string, messages ...core.OutputMessage) {
+func (handler *notifiersHandler) NotifyWithRetry(caller string, messages ...core.OutputMessage) error {
 	log.Debug("notifiersHandler.NotifyWithRetry",
 		"executor", caller, "num messages", len(messages), "num retries", handler.numRetries,
 		"num notifiers", len(handler.notifiers))
 
 	notifiersThatErrored := make(map[string]OutputNotifier)
 	handler.handleFirstSend(notifiersThatErrored, messages)
-	handler.handleRetries(notifiersThatErrored, messages)
+	return handler.handleRetries(notifiersThatErrored, messages)
 }
 
 func (handler *notifiersHandler) handleFirstSend(notifiersThatErrored map[string]OutputNotifier, messages []core.OutputMessage) {
@@ -68,10 +68,10 @@ func (handler *notifiersHandler) handleFirstSend(notifiersThatErrored map[string
 	}
 }
 
-func (handler *notifiersHandler) handleRetries(notifiersThatErrored map[string]OutputNotifier, messages []core.OutputMessage) {
+func (handler *notifiersHandler) handleRetries(notifiersThatErrored map[string]OutputNotifier, messages []core.OutputMessage) error {
 	if handler.numRetries == 0 && len(notifiersThatErrored) == 0 {
 		log.Debug("notifiersHandler.NotifyWithRetry no errors found")
-		return
+		return nil
 	}
 
 	for i := uint32(0); i < handler.numRetries; i++ {
@@ -79,11 +79,11 @@ func (handler *notifiersHandler) handleRetries(notifiersThatErrored map[string]O
 		handler.notifyInRetryMode(i, notifiersThatErrored, messages)
 
 		if len(notifiersThatErrored) == 0 {
-			return
+			return nil
 		}
 	}
 
-	log.Error("notifiersHandler.NotifyWithRetry could not send all messages", "num notifiers with problems", len(notifiersThatErrored))
+	return fmt.Errorf("%w: num notifiers with problems: %d", errNotificationsSendingProblems, len(notifiersThatErrored))
 }
 
 func (handler *notifiersHandler) notifyInRetryMode(retryNumber uint32, notifiersThatErrored map[string]OutputNotifier, messages []core.OutputMessage) {

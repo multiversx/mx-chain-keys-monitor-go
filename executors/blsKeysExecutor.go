@@ -102,9 +102,13 @@ func (executor *blsKeysExecutor) Execute(ctx context.Context) error {
 
 	messages := executor.createMessages(problematicKeys)
 	executor.statusHandler.CollectKeysProblems(messages)
-	executor.outputNotifiersHandler.NotifyWithRetry(blsExecutorName, messages...)
+	err = executor.outputNotifiersHandler.NotifyWithRetry(blsExecutorName, messages...)
+	if err != nil {
+		log.Debug("blsKeysExecutor.Execute", "executor", executor.name, "error notifying", err.Error())
+		executor.statusHandler.ErrorEncountered(err)
+	}
 
-	return nil
+	return err
 }
 
 func (executor *blsKeysExecutor) createMessages(problematicKeys []core.CheckResponse) []core.OutputMessage {

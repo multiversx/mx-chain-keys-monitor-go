@@ -96,8 +96,9 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 		encounteredError := false
 		args := ArgsBLSKeysExecutor{
 			OutputNotifiersHandler: &mock.OutputNotifiersHandlerStub{
-				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
+				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
 					assert.Fail(t, "should have not called the output notifiers handler")
+					return nil
 				},
 			},
 			RatingsChecker: &mock.RatingsCheckerStub{
@@ -132,8 +133,9 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 		encounteredError := false
 		args := ArgsBLSKeysExecutor{
 			OutputNotifiersHandler: &mock.OutputNotifiersHandlerStub{
-				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
+				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
 					assert.Fail(t, "should have not called the output notifiers handler")
+					return nil
 				},
 			},
 			RatingsChecker: &mock.RatingsCheckerStub{
@@ -172,8 +174,9 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 		encounteredError := false
 		args := ArgsBLSKeysExecutor{
 			OutputNotifiersHandler: &mock.OutputNotifiersHandlerStub{
-				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
+				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
 					assert.Fail(t, "should have not called the output notifiers handler")
+					return nil
 				},
 			},
 			RatingsChecker: &mock.RatingsCheckerStub{
@@ -207,8 +210,9 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 
 		args := ArgsBLSKeysExecutor{
 			OutputNotifiersHandler: &mock.OutputNotifiersHandlerStub{
-				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
+				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
 					assert.Fail(t, "should have not called the output notifiers handler")
+					return nil
 				},
 			},
 			RatingsChecker: &mock.RatingsCheckerStub{
@@ -246,9 +250,11 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 		getAllBLSKeysCalled := false
 		args := ArgsBLSKeysExecutor{
 			OutputNotifiersHandler: &mock.OutputNotifiersHandlerStub{
-				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) {
+				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
 					outputNotifierMessages = messages
 					assert.Equal(t, blsExecutorName, caller)
+
+					return nil
 				},
 			},
 			RatingsChecker: &mock.RatingsCheckerStub{
@@ -319,6 +325,96 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 		assert.True(t, getAllBLSKeysCalled)
 		assert.Equal(t, expectedSlice, outputNotifierMessages)
 		assert.Equal(t, expectedSlice, statusHandlerMessages)
+	})
+	t.Run("should work for 2 problematic keys while the notifiers handler errors", func(t *testing.T) {
+		t.Parallel()
+
+		bls1 := "bls1"
+		bls2 := "bls2"
+
+		var outputNotifierMessages []core.OutputMessage
+		var statusHandlerMessages []core.OutputMessage
+		getAllBLSKeysCalled := false
+		errorEncountered := false
+		args := ArgsBLSKeysExecutor{
+			OutputNotifiersHandler: &mock.OutputNotifiersHandlerStub{
+				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
+					outputNotifierMessages = messages
+					assert.Equal(t, blsExecutorName, caller)
+
+					return expectedErr
+				},
+			},
+			RatingsChecker: &mock.RatingsCheckerStub{
+				CheckHandler: func(statistics map[string]*core.ValidatorStatistics, extraBLSKeys []string) ([]core.CheckResponse, error) {
+					assert.Equal(t, []string{"extra key"}, extraBLSKeys)
+
+					return []core.CheckResponse{
+						{
+							HexBLSKey: bls1,
+							Status:    "status1",
+						},
+						{
+							HexBLSKey: bls2,
+							Status:    "status2",
+						},
+					}, nil
+				},
+			},
+			ValidatorStatisticsQuerier: &mock.ValidatorStatisticsQuerierStub{
+				QueryHandler: func(ctx context.Context) (map[string]*core.ValidatorStatistics, error) {
+					return nil, nil
+				},
+			},
+			StatusHandler: &mock.StatusHandlerStub{
+				ErrorEncounteredHandler: func(err error) {
+					assert.Equal(t, expectedErr, err)
+					errorEncountered = true
+				},
+				CollectKeysProblemsHandler: func(messages []core.OutputMessage) {
+					statusHandlerMessages = messages
+				},
+			},
+			BlsKeysFetcher: &mock.BLSKEysFetcherStub{
+				GetAllBLSKeysHandler: func(ctx context.Context, sender string) ([]string, error) {
+					getAllBLSKeysCalled = true
+
+					return []string{"extra key"}, nil
+				},
+			},
+			Name:        "executor test name",
+			ExplorerURL: "https://explorer.com",
+		}
+		executor, _ := NewBLSKeysExecutor(args)
+
+		err := executor.Execute(context.Background())
+		assert.Equal(t, expectedErr, err)
+
+		expectedSlice := []core.OutputMessage{
+			{
+				Type:               core.ErrorMessageOutputType,
+				IdentifierType:     "BLS key",
+				Identifier:         "bls1",
+				ShortIdentifier:    "bls1",
+				IdentifierURL:      "https://explorer.com/nodes/bls1",
+				ExecutorName:       "executor test name",
+				ProblemEncountered: "status1",
+			},
+			{
+				Type:               core.ErrorMessageOutputType,
+				IdentifierType:     "BLS key",
+				Identifier:         "bls2",
+				ShortIdentifier:    "bls2",
+				IdentifierURL:      "https://explorer.com/nodes/bls2",
+				ExecutorName:       "executor test name",
+				ProblemEncountered: "status2",
+			},
+		}
+
+		assert.True(t, getAllBLSKeysCalled)
+		assert.Equal(t, expectedSlice, outputNotifierMessages)
+		assert.Equal(t, expectedSlice, statusHandlerMessages)
+		assert.True(t, errorEncountered)
 	})
 }
 
