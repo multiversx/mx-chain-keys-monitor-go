@@ -118,7 +118,7 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 					assert.Equal(t, expectedErr, err)
 					encounteredError = true
 				},
-				ProblematicBLSKeysFoundHandler: func(messages []core.OutputMessage) {
+				CollectKeysProblemsHandler: func(messages []core.OutputMessage) {
 					assert.Fail(t, "should have not called the status handler")
 				},
 			},
@@ -156,7 +156,7 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 					assert.Equal(t, expectedErr, err)
 					encounteredError = true
 				},
-				ProblematicBLSKeysFoundHandler: func(messages []core.OutputMessage) {
+				CollectKeysProblemsHandler: func(messages []core.OutputMessage) {
 					assert.Fail(t, "should have not called the status handler")
 				},
 			},
@@ -198,7 +198,7 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 					assert.Equal(t, expectedErr, err)
 					encounteredError = true
 				},
-				ProblematicBLSKeysFoundHandler: func(messages []core.OutputMessage) {
+				CollectKeysProblemsHandler: func(messages []core.OutputMessage) {
 					assert.Fail(t, "should have not called the status handler")
 				},
 			},
@@ -234,7 +234,7 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 				ErrorEncounteredHandler: func(err error) {
 					assert.Fail(t, "should have not called error encountered")
 				},
-				ProblematicBLSKeysFoundHandler: func(messages []core.OutputMessage) {
+				CollectKeysProblemsHandler: func(messages []core.OutputMessage) {
 					assert.Fail(t, "should have not called the status handler")
 				},
 			},
@@ -295,7 +295,7 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 				ErrorEncounteredHandler: func(err error) {
 					assert.Fail(t, "should have not called error encountered")
 				},
-				ProblematicBLSKeysFoundHandler: func(messages []core.OutputMessage) {
+				CollectKeysProblemsHandler: func(messages []core.OutputMessage) {
 					outputNotifierMessages["status handler"] = messages
 				},
 			},
