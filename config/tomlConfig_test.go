@@ -44,6 +44,13 @@ func TestLoadConfig(t *testing.T) {
 	    SmtpPort = 587
 	    SmtpHost = "smtp.gmail.com"
 
+    # Uses Telegram service that can notify Desktop, Android or iOS devices. Requires a running bot and the chat ID for
+    # the user that will be notified. 
+    # If you enable this notifier, remember to specify the credentials in credentials.toml file
+    [OutputNotifiers.Telegram]
+        Enabled = true
+        URL = "https://api.telegram.org"
+
 
 [[BLSKeysMonitoring]]
     AlarmDeltaRatingDrop = 1.0 # maximum Rating-TempRating value that will trigger an alarm, for the public testnet might use a higher value (2 or 3)
@@ -90,6 +97,10 @@ func TestLoadConfig(t *testing.T) {
 				SmtpPort: 587,
 				SmtpHost: "smtp.gmail.com",
 			},
+			Telegram: TelegramNotifierConfig{
+				Enabled: true,
+				URL:     "https://api.telegram.org",
+			},
 		},
 		BLSKeysMonitoring: []BLSKeysMonitorConfig{
 			{
@@ -129,6 +140,10 @@ func TestLoadCredentialsConfig(t *testing.T) {
 [Smtp]
     Email="from@email.com"
     Password="password"
+
+[Telegram]
+    Token="token2"
+    ChatID="chat_id2"
 `
 
 	expectedCfg := CredentialsConfig{
@@ -139,6 +154,10 @@ func TestLoadCredentialsConfig(t *testing.T) {
 		Smtp: EmailPasswordConfig{
 			Email:    "from@email.com",
 			Password: "password",
+		},
+		Telegram: TelegramCredentialsConfig{
+			Token:  "token2",
+			ChatID: "chat_id2",
 		},
 	}
 

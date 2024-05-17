@@ -35,6 +35,7 @@ type OutputNotifiersConfig struct {
 	SecondsBetweenRetries int
 	Pushover              PushoverNotifierConfig
 	Smtp                  SmtpNotifierConfig
+	Telegram              TelegramNotifierConfig
 }
 
 // PushoverNotifierConfig specifies the options for the Pushover service
@@ -49,6 +50,12 @@ type SmtpNotifierConfig struct {
 	To       string
 	SmtpPort int
 	SmtpHost string
+}
+
+// TelegramNotifierConfig specifies the options for the Telegram service
+type TelegramNotifierConfig struct {
+	Enabled bool
+	URL     string
 }
 
 // BLSKeysMonitorConfig defines the configuration for the BLS keys monitor

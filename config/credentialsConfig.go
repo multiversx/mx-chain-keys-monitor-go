@@ -4,6 +4,7 @@ package config
 type CredentialsConfig struct {
 	Pushover PushoverCredentialsConfig
 	Smtp     EmailPasswordConfig
+	Telegram TelegramCredentialsConfig
 }
 
 // PushoverCredentialsConfig defines the Pushover service credentials
@@ -16,4 +17,10 @@ type PushoverCredentialsConfig struct {
 type EmailPasswordConfig struct {
 	Email    string
 	Password string
+}
+
+// TelegramCredentialsConfig defines the Telegram service credentials
+type TelegramCredentialsConfig struct {
+	Token  string
+	ChatID string
 }
