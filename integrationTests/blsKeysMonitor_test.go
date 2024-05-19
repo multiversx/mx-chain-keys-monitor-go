@@ -55,10 +55,34 @@ func TestBlsKeysNotifier(t *testing.T) {
 		},
 	}
 
+	allConfigs := config.AllConfigs{
+		Config: config.MainConfig{
+			OutputNotifiers: config.OutputNotifiersConfig{
+				NumRetries:            0,
+				SecondsBetweenRetries: 1,
+				Pushover: config.PushoverNotifierConfig{
+					Enabled: false,
+				},
+				Smtp: config.SmtpNotifierConfig{
+					Enabled: false,
+				},
+				Telegram: config.TelegramNotifierConfig{
+					Enabled: false,
+				},
+			},
+		},
+	}
+
+	// test also the output notifiers factory
+	notifiers, err := factory.CreateOutputNotifiers(allConfigs)
+	assert.Nil(t, err)
+
+	notifiers = append(notifiers, notifier) // add the notifier used in this test
+
 	argsNotifiersHandler := executors.ArgsNotifiersHandler{
-		Notifiers:          []executors.OutputNotifier{notifier},
-		NumRetries:         0,
-		TimeBetweenRetries: time.Second,
+		Notifiers:          notifiers,
+		NumRetries:         allConfigs.Config.OutputNotifiers.NumRetries,
+		TimeBetweenRetries: time.Second * time.Duration(allConfigs.Config.OutputNotifiers.SecondsBetweenRetries),
 	}
 
 	notifiersHandler, err := executors.NewNotifiersHandler(argsNotifiersHandler)
