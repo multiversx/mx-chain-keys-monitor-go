@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"runtime"
@@ -11,6 +12,7 @@ import (
 	"github.com/multiversx/mx-chain-core-go/core"
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-keys-monitor-go/config"
+	"github.com/multiversx/mx-chain-keys-monitor-go/executors"
 	"github.com/multiversx/mx-chain-keys-monitor-go/factory"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-logger-go/file"
@@ -52,6 +54,8 @@ VERSION:
 //	for /f %i in ('git describe --tags --long --dirty') do set VERS=%i
 //	go build -v -ldflags="-X main.appVersion=%VERS%"
 var appVersion = "undefined"
+var closers = make([]io.Closer, 0)
+var statusHandler executors.StatusHandler
 
 func main() {
 	_ = logger.SetDisplayByteSlice(logger.ToHexShort)
@@ -120,17 +124,18 @@ func startMonitorTool(c *cli.Context, baseVersion string, log logger.Logger) err
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	// TODO call here the future startMonitoring function
+	err = startMonitoring(allConfigs)
+	if err != nil {
+		return err
+	}
 
 	<-sigs
 	log.Info("terminating at user's signal...")
-	// TODO: uncomment this after defining what a statusHandler is
-	// statusHandler.SendCloseMessage()
+	statusHandler.SendCloseMessage()
 
 	time.Sleep(time.Second * 5)
 
-	// TODO: uncomment this after creating the closeAll function
-	// closeAll(log)
+	closeAll(log)
 
 	if !check.IfNil(fileLogging) {
 		err = fileLogging.Close()
@@ -185,4 +190,52 @@ func attachFileLogger(log logger.Logger, workingDir string, isSaveLogFile bool, 
 	}
 
 	return fileLogging, nil
+}
+
+func startMonitoring(allConfigs config.AllConfigs) error {
+	notifiersList, err := factory.CreateOutputNotifiers(allConfigs)
+	if err != nil {
+		return err
+	}
+
+	argsNotifiersHandler := executors.ArgsNotifiersHandler{
+		Notifiers:          notifiersList,
+		NumRetries:         allConfigs.Config.OutputNotifiers.NumRetries,
+		TimeBetweenRetries: time.Duration(allConfigs.Config.OutputNotifiers.SecondsBetweenRetries) * time.Second,
+	}
+
+	notifiersHandler, err := executors.NewNotifiersHandler(argsNotifiersHandler)
+	if err != nil {
+		return err
+	}
+
+	var polling io.Closer
+	statusHandler, polling, err = factory.CreateStatusHandler(allConfigs.Config.General, notifiersHandler)
+	if err != nil {
+		return err
+	}
+
+	closers = append(closers, polling)
+
+	for _, blsKeysConfig := range allConfigs.Config.BLSKeysMonitoring {
+		monitor, errCreate := factory.NewBLSKeysMonitor(
+			blsKeysConfig,
+			notifiersHandler,
+			statusHandler,
+		)
+		if errCreate != nil {
+			return errCreate
+		}
+
+		closers = append(closers, monitor)
+	}
+
+	return nil
+}
+
+func closeAll(log logger.Logger) {
+	for _, closer := range closers {
+		err := closer.Close()
+		log.LogIfError(err)
+	}
 }

@@ -29,6 +29,8 @@ func CreateStatusHandler(
 		return nil, nil, err
 	}
 
+	statusHandler.NotifyAppStart()
+
 	dayOfWeek, err := parseWeekday(generalConfig.SystemSelfCheck.DayOfWeek)
 	if err != nil {
 		return nil, nil, err

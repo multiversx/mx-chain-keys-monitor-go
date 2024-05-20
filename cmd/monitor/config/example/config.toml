@@ -1,0 +1,55 @@
+[General]
+    ApplicationName = "Keys monitoring app"
+    # the application can send messages about the internal status at regular intervals
+    [General.SystemSelfCheck]
+        Enabled = true
+        DayOfWeek = "every day" # can also be "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" and "Sunday"
+        Hour = 12 # valid interval 0-23
+        Minute = 00 # valid interval 0-59
+        PollingIntervalInSec = 30
+    [General.Logs]
+        LogFileLifeSpanInMB = 1024 # 1GB
+        LogFileLifeSpanInSec = 86400 # 1 day
+
+[OutputNotifiers]
+    NumRetries = 3
+    SecondsBetweenRetries = 10
+
+    # Uses Pushover service that can notify Desktop, Android or iOS devices. Requires a valid subscription.
+    # If you enable this notifier, remember to specify the credentials in credentials.toml file
+    [OutputNotifiers.Pushover]
+        Enabled = false
+        URL = "https://api.pushover.net/1/messages.json"
+
+    # SMTP (email) based notification
+    # If you enable this notifier, remember to specify the credentials in credentials.toml file
+    # If you are using gmail server, please make sure you activate the IMAP server and use App passwords instead of the account's password
+    [OutputNotifiers.Smtp]
+        Enabled = false
+        To = "to@email.com"
+        SmtpPort = 587
+        SmtpHost = "smtp.gmail.com"
+
+    # Uses Telegram service that can notify Desktop, Android or iOS devices. Requires a running bot and the chat ID for
+    # the user that will be notified.
+    # If you enable this notifier, remember to specify the credentials in credentials.toml file
+    [OutputNotifiers.Telegram]
+        Enabled = false
+        URL = "https://api.telegram.org"
+
+[[BLSKeysMonitoring]]
+    AlarmDeltaRatingDrop = 1.0 # maximum Rating-TempRating value that will trigger an alarm, for the public testnet might use a higher value (2 or 3)
+    Name = "network 1"
+    ApiURL = "API URL 1"
+    ExplorerURL = ""
+    PollingIntervalInSeconds = 300  # 5 minutes
+    ListFile = "./config/network1.list"
+
+# To another networks, un-comment below and add more sections like this
+#[[BLSKeysMonitoring]]
+#    AlarmDeltaRatingDrop = 1.0 # maximum Rating-TempRating value that will trigger an alarm, for the public testnet might use a higher value (2 or 3)
+#    Name = "network 2"
+#    ApiURL = "API URL 2"
+#    ExplorerURL = ""
+#    PollingIntervalInSeconds = 300  # 5 minutes
+#    KeysFile = "./config/network2.list"
