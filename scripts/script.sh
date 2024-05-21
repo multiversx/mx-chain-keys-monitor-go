@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
 
-#Make script aware of its location
+# Make script aware of its location
 SCRIPTPATH="$( cd -- "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 ; pwd -P )"
 
 source $SCRIPTPATH/config/variables.cfg
 source $SCRIPTPATH/config/functions.cfg
 source $SCRIPTPATH/config/menu_functions.cfg
 
-#See if the user has passed any command line arguments and if not show the menu
+# See if the user has passed any command line arguments and if not show the menu
 if [ $# -eq 0 ]
   then
 
-  show_menu #Show all the menu options
+  show_menu # Show all the menu options
 
   COLUMNS=8
   PS3="Please select an action:"

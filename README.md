@@ -5,11 +5,11 @@
 
 # MultiversX keys monitor
 
-This tool allows the monitoring of BLS keys that can participate into the consensus, regardless the shard they are currently operating.
+This tool allows the monitoring of BLS keys that can participate into the consensus, regardless of the shard they are currently operating in.
 This is done by continuously polling the `/validator/statistics` API endpoint route. 
 It can monitor one or more networks so one instance of this tool is enough for all keys used on mainnet/testnet or devnet networks.
 The monitored BLS keys will be defined as lists. Also, there is the possibility to define just an owner address that staked the BLS keys 
-and the application will automatically fetch the registered BLS keys on that identity.
+and the application will automatically fetch the registered BLS keys for that identity.
 
 ## Feature list
 - [x] Keys monitor
@@ -19,11 +19,11 @@ and the application will automatically fetch the registered BLS keys on that ide
     - [x] Threshold definition on each set for the allowed rating drop
     - [x] Configurable polling time for each definition set
 - [x] Notification system
-    - [x] Integrated the [Pushover](https://pushover.net/) service that allows easy mobile device notifications
+    - [x] Integrated the [Pushover](https://pushover.net/) service to allow easy access to push-notifications on mobile devices
     - [x] Integrated the SMTP email service to notify thorough emails the events encountered
     - [X] Integrated the [Telegram bot](https://core.telegram.org/bots) notification service 
 - [x] System self-check messages
-    - [x] Integrated a self-check system that can send messages periodical messages about the status of the app
+    - [x] Integrated a self-check system that can periodically send messages on the status of the app
 - [x] Scripts & installation support
     - [x] Added scripts for easy setup & upgrade
 
@@ -31,7 +31,7 @@ and the application will automatically fetch the registered BLS keys on that ide
 
 ### Initial setup
 
-Although is possible, it is not recommended to run the application as `root`. For that reason, a new user is required to be created.
+Although it's possible, it is not recommended to run the application as `root`. For that reason, a new user is required to be created.
 For example, the following script creates a new user called `ubuntu`. This script can be run as `root`.
 
 ```bash
@@ -92,7 +92,7 @@ OVERRIDE_VER=""
 The `CUSTOM_HOME` and `CUSTOM_USER` will need to be changed if the current user is not `ubuntu`. 
 To easily figure out the current user, the bash command `whoami` can be used.
 
-It is strongly recommended to use a GitHub access token because the scripts consumes the GitHub APIs and
+It is strongly recommended to use a GitHub access token because the scripts consume the GitHub APIs and
 throttling might occur without the access token.
 
 The `MONITOR_EXTRA_FLAGS` can contain extra flags to be called whenever the application is started. 
@@ -111,7 +111,7 @@ cd ~/mx-chain-keys-monitor-go/scripts
 
 ### Application config
 
-After the application has been installed, it is now time to configure the application.
+After the application has been installed, it is now time to configure it.
 For this, you should edit the `config.toml` and `credentials.toml` files and add files containing lists of BLS keys or addresses in the 
 `~/mx-chain-keys-monitor-go/cmd/monitor/config` directory.
 
@@ -191,7 +191,7 @@ passwords or access tokens will be specified.
  
   - The `AlarmDeltaRatingDrop` option will specify how large the difference between the "Epoch start rating" - "Current rating" is allowed before 
 emitting an alert. Usually, a value of `1` will suffice in most cases. On the public testnet, this value might be increased to `2` or even `3` to 
-reduce the number of false alarms due to the nature of the other nodes operating in the network.   
+reduce the number of false positive alarms due to the nature of the other nodes operating on the network.   
 
   - The `Name` defines a string for the monitored network. Can be something like `Mainnet`, `Testnet`, `Devnet` or any kind of identification string.
 
