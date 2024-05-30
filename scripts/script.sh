@@ -129,6 +129,10 @@ case "$1" in
   get_logs
   ;;
 
+'test_notifiers')
+  test_notifiers
+  ;;
+
 esac
 
 fi
