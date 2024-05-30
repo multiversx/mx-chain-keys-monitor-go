@@ -33,7 +33,7 @@ You can choose to run this tool either in a Docker on in a systemd service.
 
 ### Docker Setup
 
-You need to have [docker](https://docs.docker.com/engine/install/) installed on your machine.
+You need to have [Docker](https://docs.docker.com/engine/install/) installed on your machine.
 
 Create a directory to save your configs in, and copy the 3 example files required for the tool to run :
 ```bash
@@ -50,7 +50,7 @@ Customize your 3 files :
 
 Build the image, use the Dockerfile ;
 ```bash
-docker buildx build -t mx-chain-keys-monitor-go:latest -f Dockerfile .
+sudo docker buildx build -t mx-chain-keys-monitor-go:latest -f Dockerfile .
 ```
 
 Then, edit the lines 7-9 in `./docker-compose.yml` :
@@ -64,7 +64,7 @@ If you want to provide extra arguments to the tool, add them under the `command`
 You're ready 🚀
 
 ```bash
-docker compose up -d
+sudo docker compose up -d
 ```
 
 
@@ -286,4 +286,9 @@ Also, if the application misbehaves, the logs can be retrieved by using this com
 ```bash
 cd ~/mx-chain-keys-monitor-go/scripts
 ./script.sh get_logs
+```
+
+If the application crashes and you have followed the installation via Docker, the command to retrieve the logs is as follows:
+```bash
+sudo docker logs -f mx-chain-keys-monitor-go
 ```
