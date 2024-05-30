@@ -29,6 +29,45 @@ and the application will automatically fetch the registered BLS keys for that id
 
 ## Installation
 
+You can choose to run this tool either in a Docker on in a systemd service.
+
+### Docker Setup
+
+You need to have [docker](https://docs.docker.com/engine/install/) installed on your machine.
+
+Create a directory to save your configs in, and copy the 3 example files required for the tool to run :
+```bash
+mkdir <config_dir>
+cp ./cmd/monitor/config/example/config.toml <config_dir>/config.toml
+cp ./cmd/monitor/config/example/credentials.toml <config_dir>/credentials.toml
+cp ./cmd/monitor/config/example/network1.list <config_dir>/network1.list
+```
+
+Customize your 3 files :
+- config.toml is the tool global configuration
+- credentials.toml is where you save your secrets 
+- network1.list is where you fill your addresses to monitor (⚠️ this file will be located in /network1.list in the container, **make sure to make this path correspond in the config.toml file** ⚠️)
+
+Build the image, use the Dockerfile ;
+```bash
+docker buildx build -t mx-chain-keys-monitor-go:latest -f Dockerfile .
+```
+
+Then, edit the lines 7-9 in `./docker-compose.yml` :
+- `<path>/<to>/<your>/config.toml:/config.toml:ro`
+- `<path>/<to>/<your>/credentials.toml:/credentials.toml:ro`
+- `<path>/<to>/<your>/network1.list:/network1.list:ro`
+- You can append more networkX.list files if you want to 
+
+If you want to provide extra arguments to the tool, add them under the `command` object.
+
+You're ready 🚀
+
+```bash
+docker compose up -d
+```
+
+
 ### Initial setup
 
 Although it's possible, it is not recommended to run the application as `root`. For that reason, a new user is required to be created.
