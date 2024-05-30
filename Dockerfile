@@ -13,6 +13,9 @@ RUN apt-get update && apt-get upgrade && apt-get install -y ${PACKAGES}
 RUN adduser --uid ${UID} ${USERNAME}
 
 FROM scratch AS runner
+LABEL description="This Docker image runs the MultiversX monitoring binary."
+LABEL website="https://multiversx.com/"
+LABEL maintainer="Virgil GAGNIEUX <gagnieux.virgil@proton.me>"
 ARG UID=10000
 ARG GID=10000
 ARG USERNAME="mx"
