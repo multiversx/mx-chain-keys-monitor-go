@@ -23,7 +23,7 @@ if [ $# -eq 0 ]
 
   case $opt in
 
-  `init`)
+  'init')
     init
     echo -e
     read -n 1 -s -r -p "  Process finished. Press any key to continue..."
