@@ -16,7 +16,7 @@ if [ $# -eq 0 ]
 
   COLUMNS=8
   PS3="Please select an action:"
-  options=("init" "install" "upgrade" "start" "stop" "cleanup" "get_logs" "quit")
+  options=("init" "install" "upgrade" "start" "stop" "cleanup" "get_logs" "test_notifiers" "quit")
 
   select opt in "${options[@]}"
   do
@@ -73,6 +73,14 @@ if [ $# -eq 0 ]
 
   'get_logs')
     get_logs
+    echo -e
+    read -n 1 -s -r -p "  Process finished. Press any key to continue..."
+    clear
+    show_menu
+    ;;
+
+  'test_notifiers')
+    test_notifiers
     echo -e
     read -n 1 -s -r -p "  Process finished. Press any key to continue..."
     clear
