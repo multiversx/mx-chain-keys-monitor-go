@@ -167,7 +167,7 @@ This file contains the general application configuration file.
         Enabled = true
         DayOfWeek = "every day" # can also be "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" and "Sunday"
         Hour = 12 # valid interval 0-23
-        Minute = 00 # valid interval 0-59
+        Minute = 0 # valid interval 0-59
         PollingIntervalInSec = 30
     [General.Logs]
         LogFileLifeSpanInMB = 1024 # 1GB
