@@ -24,12 +24,10 @@ func CreateOutputNotifiers(allConfig config.AllConfigs) ([]executors.OutputNotif
 	outputNotifiers = append(outputNotifiers, logNotifier)
 
 	if allConfig.Config.OutputNotifiers.Pushover.Enabled {
-		outputNotifiers = append(outputNotifiers, notifiers.NewPushoverNotifier(
-			allConfig.Config.OutputNotifiers.Pushover.URL,
-			allConfig.Credentials.Pushover.Token,
-			allConfig.Credentials.Pushover.UserKey,
-		))
-		log.Debug("created pushover notifier")
+		pushoverNotifiers := createPushoverNotifiers(allConfig)
+		outputNotifiers = append(outputNotifiers, pushoverNotifiers...)
+
+		log.Debug("created pushover notifier(s)", "num pushover notifiers", len(pushoverNotifiers))
 	}
 	if allConfig.Config.OutputNotifiers.Smtp.Enabled {
 		args := notifiers.ArgsSmtpNotifier{
@@ -44,13 +42,53 @@ func CreateOutputNotifiers(allConfig config.AllConfigs) ([]executors.OutputNotif
 		log.Debug("created smtp notifier")
 	}
 	if allConfig.Config.OutputNotifiers.Telegram.Enabled {
-		outputNotifiers = append(outputNotifiers, notifiers.NewTelegramNotifier(
-			allConfig.Config.OutputNotifiers.Telegram.URL,
-			allConfig.Credentials.Telegram.Token,
-			allConfig.Credentials.Telegram.ChatID,
-		))
-		log.Debug("created telegram notifier")
+		telegramNotifiers := createTelegramNotifiers(allConfig)
+		outputNotifiers = append(outputNotifiers, telegramNotifiers...)
+
+		log.Debug("created telegram notifier(s)", "num telegram notifiers", len(telegramNotifiers))
 	}
 
 	return outputNotifiers, nil
+}
+
+func createPushoverNotifiers(allConfig config.AllConfigs) []executors.OutputNotifier {
+	defaultNotifier := notifiers.NewPushoverNotifier(
+		allConfig.Config.OutputNotifiers.Pushover.URL,
+		allConfig.Credentials.Pushover.Token,
+		allConfig.Credentials.Pushover.UserKey,
+	)
+
+	notifierInstances := []executors.OutputNotifier{defaultNotifier}
+	for _, credentials := range allConfig.Credentials.Pushover.Additional {
+		notifierInstance := notifiers.NewPushoverNotifier(
+			allConfig.Config.OutputNotifiers.Pushover.URL,
+			credentials.Token,
+			credentials.UserKey,
+		)
+
+		notifierInstances = append(notifierInstances, notifierInstance)
+	}
+
+	return notifierInstances
+}
+
+func createTelegramNotifiers(allConfig config.AllConfigs) []executors.OutputNotifier {
+	defaultNotifier := notifiers.NewTelegramNotifier(
+		allConfig.Config.OutputNotifiers.Telegram.URL,
+		allConfig.Credentials.Telegram.Token,
+		allConfig.Credentials.Telegram.ChatID,
+	)
+
+	notifierInstances := []executors.OutputNotifier{defaultNotifier}
+	for _, credentials := range allConfig.Credentials.Telegram.Additional {
+		notifierInstance := notifiers.NewTelegramNotifier(
+			allConfig.Config.OutputNotifiers.Telegram.URL,
+			credentials.Token,
+			credentials.ChatID,
+		)
+
+		notifierInstances = append(notifierInstances, notifierInstance)
+	}
+
+	return notifierInstances
 }
