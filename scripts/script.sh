@@ -16,7 +16,7 @@ if [ $# -eq 0 ]
 
   COLUMNS=8
   PS3="Please select an action:"
-  options=("init" "install" "upgrade" "start" "stop" "cleanup" "get_logs" "quit")
+  options=("init" "install" "upgrade" "start" "stop" "cleanup" "get_logs" "test_notifiers" "quit")
 
   select opt in "${options[@]}"
   do
@@ -79,6 +79,14 @@ if [ $# -eq 0 ]
     show_menu
     ;;
 
+  'test_notifiers')
+    test_notifiers
+    echo -e
+    read -n 1 -s -r -p "  Process finished. Press any key to continue..."
+    clear
+    show_menu
+    ;;
+
   'quit')
     echo -e
     echo -e "${GREEN}---> Exiting scripts menu...${NC}"
@@ -119,6 +127,10 @@ case "$1" in
 
 'get_logs')
   get_logs
+  ;;
+
+'test_notifiers')
+  test_notifiers
   ;;
 
 esac

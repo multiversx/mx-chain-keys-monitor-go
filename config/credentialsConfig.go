@@ -7,10 +7,22 @@ type CredentialsConfig struct {
 	Telegram TelegramCredentialsConfig
 }
 
-// PushoverCredentialsConfig defines the Pushover service credentials
-type PushoverCredentialsConfig struct {
+// TokenUserKeyConfig defines a struct that contains one token and one user key
+type TokenUserKeyConfig struct {
 	Token   string
 	UserKey string
+}
+
+// TokenChatIDConfig defines a struct that contains one token and one chat ID
+type TokenChatIDConfig struct {
+	Token  string
+	ChatID string
+}
+
+// PushoverCredentialsConfig defines the Pushover service credentials
+type PushoverCredentialsConfig struct {
+	TokenUserKeyConfig
+	Additional []TokenUserKeyConfig
 }
 
 // EmailPasswordConfig defines an email-password credential
@@ -21,6 +33,6 @@ type EmailPasswordConfig struct {
 
 // TelegramCredentialsConfig defines the Telegram service credentials
 type TelegramCredentialsConfig struct {
-	Token  string
-	ChatID string
+	TokenChatIDConfig
+	Additional []TokenChatIDConfig
 }

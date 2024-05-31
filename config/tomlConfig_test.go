@@ -134,30 +134,62 @@ func TestLoadCredentialsConfig(t *testing.T) {
 
 	testString := `
 [Pushover]
-    Token="token1"
-    UserKey="userKey1"
+    Token="token P1"
+    UserKey="userKey P1"
+    Additional = [
+        { Token = "token P2", UserKey = "userKey P2"},
+        { Token = "token P3", UserKey = "userKey P3"},
+    ]
 
 [Smtp]
     Email="from@email.com"
     Password="password"
 
 [Telegram]
-    Token="token2"
-    ChatID="chat_id2"
+    Token="token T1"
+    ChatID="chatID T1"
+    Additional = [
+        { Token = "token T2", ChatID = "chatID T2"},
+        { Token = "token T3", ChatID = "chatID T3"},
+    ]
 `
 
 	expectedCfg := CredentialsConfig{
 		Pushover: PushoverCredentialsConfig{
-			Token:   "token1",
-			UserKey: "userKey1",
+			TokenUserKeyConfig: TokenUserKeyConfig{
+				Token:   "token P1",
+				UserKey: "userKey P1",
+			},
+			Additional: []TokenUserKeyConfig{
+				{
+					Token:   "token P2",
+					UserKey: "userKey P2",
+				},
+				{
+					Token:   "token P3",
+					UserKey: "userKey P3",
+				},
+			},
 		},
 		Smtp: EmailPasswordConfig{
 			Email:    "from@email.com",
 			Password: "password",
 		},
 		Telegram: TelegramCredentialsConfig{
-			Token:  "token2",
-			ChatID: "chat_id2",
+			TokenChatIDConfig: TokenChatIDConfig{
+				Token:  "token T1",
+				ChatID: "chatID T1",
+			},
+			Additional: []TokenChatIDConfig{
+				{
+					Token:  "token T2",
+					ChatID: "chatID T2",
+				},
+				{
+					Token:  "token T3",
+					ChatID: "chatID T3",
+				},
+			},
 		},
 	}
 

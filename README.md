@@ -247,6 +247,18 @@ Examples here include `https://explorer.multiversx.com` for the mainnet,
   - The `ListFile` will contain the name of the file containing BLS or identity keys. Refer to the example file called 
 `network1.list` to check how keys/identities can be defined.
 
+### Notifiers test
+
+Before the application start, it is a good practice to test the configured notifiers
+```bash
+cd ~/mx-chain-keys-monitor-go/scripts
+./script.sh test_notifiers
+```
+
+If all enabled notifiers are configured correctly, no error messages should appear on the screen.
+
+**Important: This command won't start the monitoring process!**
+
 ### Application start
 
 After editing the required config files, the application can be started.
