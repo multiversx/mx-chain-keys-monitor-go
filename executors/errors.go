@@ -16,4 +16,6 @@ var (
 	errInvalidMinute                 = errors.New("invalid minute")
 	errInvalidTimeBetweenRetries     = errors.New("invalid time between retries")
 	errNotificationsSendingProblems  = errors.New("notification sending problems")
+	errNilCurrentTimestampHandler    = errors.New("nil current timestamp")
+	errNilBLSKeysFilter              = errors.New("nil BLS keys filter")
 )

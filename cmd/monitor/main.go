@@ -220,6 +220,7 @@ func startMonitoring(allConfigs config.AllConfigs) error {
 	for _, blsKeysConfig := range allConfigs.Config.BLSKeysMonitoring {
 		monitor, errCreate := factory.NewBLSKeysMonitor(
 			blsKeysConfig,
+			allConfigs.Config.General.AlarmSnooze,
 			notifiersHandler,
 			statusHandler,
 		)

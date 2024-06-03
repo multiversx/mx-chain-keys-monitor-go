@@ -17,6 +17,7 @@ const timeBetweenBLSKeysFetch = time.Second
 // NewBLSKeysMonitor will create a BLS keys monitor based on the configs & other internal components
 func NewBLSKeysMonitor(
 	cfg config.BLSKeysMonitorConfig,
+	snoozeConfig config.AlarmSnoozeConfig,
 	notifiersHandler OutputNotifiersHandler,
 	statusHandler executors.StatusHandler,
 ) (Monitor, error) {
@@ -42,12 +43,18 @@ func NewBLSKeysMonitor(
 		return nil, err
 	}
 
+	blsKeysFilter, err := NewBLSKeysFilter(snoozeConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	argsExecutor := executors.ArgsBLSKeysExecutor{
 		OutputNotifiersHandler:     notifiersHandler,
 		RatingsChecker:             ratingsChecker,
 		ValidatorStatisticsQuerier: interactor,
 		BlsKeysFetcher:             fetcher,
 		StatusHandler:              statusHandler,
+		BLSKeysFilter:              blsKeysFilter,
 		Name:                       cfg.Name,
 		ExplorerURL:                cfg.ExplorerURL,
 	}

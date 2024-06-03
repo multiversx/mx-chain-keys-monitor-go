@@ -23,7 +23,10 @@ func TestLoadConfig(t *testing.T) {
     [General.Logs]
         LogFileLifeSpanInMB = 1024 # 1GB
         LogFileLifeSpanInSec = 86400 # 1 day
-
+    [General.AlarmSnooze]
+        Enabled = true
+        NumNotificationsForEachFaultyKey = 3
+        SnoozeTimeInSec = 86400 # 1 day
 
 [OutputNotifiers]
     NumRetries = 3
@@ -82,6 +85,11 @@ func TestLoadConfig(t *testing.T) {
 			Logs: LogsConfig{
 				LogFileLifeSpanInSec: 86400,
 				LogFileLifeSpanInMB:  1024,
+			},
+			AlarmSnooze: AlarmSnoozeConfig{
+				Enabled:                          true,
+				NumNotificationsForEachFaultyKey: 3,
+				SnoozeTimeInSec:                  86400,
 			},
 		},
 		OutputNotifiers: OutputNotifiersConfig{

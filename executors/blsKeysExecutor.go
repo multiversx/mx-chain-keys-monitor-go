@@ -23,6 +23,7 @@ type blsKeysExecutor struct {
 	blsKeysFetcher             BLSKeysFetcher
 	validatorStatisticsQuerier ValidatorStatisticsQuerier
 	statusHandler              StatusHandler
+	blsKeysFilter              BLSKeysFilter
 	name                       string
 	explorerURL                string
 }
@@ -34,6 +35,7 @@ type ArgsBLSKeysExecutor struct {
 	ValidatorStatisticsQuerier ValidatorStatisticsQuerier
 	BlsKeysFetcher             BLSKeysFetcher
 	StatusHandler              StatusHandler
+	BLSKeysFilter              BLSKeysFilter
 	Name                       string
 	ExplorerURL                string
 }
@@ -55,6 +57,9 @@ func NewBLSKeysExecutor(args ArgsBLSKeysExecutor) (*blsKeysExecutor, error) {
 	if check.IfNil(args.BlsKeysFetcher) {
 		return nil, errNilBLSKeysFetcher
 	}
+	if check.IfNil(args.BLSKeysFilter) {
+		return nil, errNilBLSKeysFilter
+	}
 
 	return &blsKeysExecutor{
 		outputNotifiersHandler:     args.OutputNotifiersHandler,
@@ -64,6 +69,7 @@ func NewBLSKeysExecutor(args ArgsBLSKeysExecutor) (*blsKeysExecutor, error) {
 		name:                       args.Name,
 		explorerURL:                args.ExplorerURL,
 		blsKeysFetcher:             args.BlsKeysFetcher,
+		blsKeysFilter:              args.BLSKeysFilter,
 	}, nil
 }
 
@@ -94,6 +100,7 @@ func (executor *blsKeysExecutor) Execute(ctx context.Context) error {
 		return err
 	}
 
+	problematicKeys = executor.filterOutKeys(problematicKeys)
 	if len(problematicKeys) == 0 {
 		log.Debug("all keys are performing normally", "executor", executor.name)
 
@@ -109,6 +116,18 @@ func (executor *blsKeysExecutor) Execute(ctx context.Context) error {
 	}
 
 	return err
+}
+
+func (executor *blsKeysExecutor) filterOutKeys(problematicKeys []core.CheckResponse) []core.CheckResponse {
+	result := make([]core.CheckResponse, 0, len(problematicKeys))
+	for _, key := range problematicKeys {
+		shouldNotify := executor.blsKeysFilter.ShouldNotify(key.HexBLSKey)
+		if shouldNotify {
+			result = append(result, key)
+		}
+	}
+
+	return result
 }
 
 func (executor *blsKeysExecutor) createMessages(problematicKeys []core.CheckResponse) []core.OutputMessage {

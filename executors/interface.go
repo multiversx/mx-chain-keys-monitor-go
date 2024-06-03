@@ -34,6 +34,12 @@ type StatusHandler interface {
 	IsInterfaceNil() bool
 }
 
+// BLSKeysFilter is able to decide if a provided BLS key needs to be filtered out or not
+type BLSKeysFilter interface {
+	ShouldNotify(blsKey string) bool
+	IsInterfaceNil() bool
+}
+
 // OutputNotifier defines the operations supported by an output notifier instance
 type OutputNotifier interface {
 	OutputMessages(messages ...core.OutputMessage) error

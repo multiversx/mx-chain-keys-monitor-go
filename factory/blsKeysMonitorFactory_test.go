@@ -22,7 +22,12 @@ func TestNewBLSKeysMonitor(t *testing.T) {
 			Name:                     "test",
 		}
 
-		monitor, err := NewBLSKeysMonitor(cfg, &mock.OutputNotifiersHandlerStub{}, &mock.StatusHandlerStub{})
+		monitor, err := NewBLSKeysMonitor(
+			cfg,
+			config.AlarmSnoozeConfig{},
+			&mock.OutputNotifiersHandlerStub{},
+			&mock.StatusHandlerStub{},
+		)
 		assert.NotNil(t, err)
 		assert.Nil(t, monitor)
 	})
@@ -37,7 +42,12 @@ func TestNewBLSKeysMonitor(t *testing.T) {
 			Name:                     "test",
 		}
 
-		monitor, err := NewBLSKeysMonitor(cfg, &mock.OutputNotifiersHandlerStub{}, &mock.StatusHandlerStub{})
+		monitor, err := NewBLSKeysMonitor(
+			cfg,
+			config.AlarmSnoozeConfig{},
+			&mock.OutputNotifiersHandlerStub{},
+			&mock.StatusHandlerStub{},
+		)
 		assert.NotNil(t, err)
 		assert.Nil(t, monitor)
 	})
@@ -52,7 +62,12 @@ func TestNewBLSKeysMonitor(t *testing.T) {
 			Name:                     "test",
 		}
 
-		monitor, err := NewBLSKeysMonitor(cfg, &mock.OutputNotifiersHandlerStub{}, nil)
+		monitor, err := NewBLSKeysMonitor(
+			cfg,
+			config.AlarmSnoozeConfig{},
+			&mock.OutputNotifiersHandlerStub{},
+			nil,
+		)
 		assert.NotNil(t, err)
 		assert.Nil(t, monitor)
 	})
@@ -67,7 +82,12 @@ func TestNewBLSKeysMonitor(t *testing.T) {
 			Name:                     "test",
 		}
 
-		monitor, err := NewBLSKeysMonitor(cfg, &mock.OutputNotifiersHandlerStub{}, &mock.StatusHandlerStub{})
+		monitor, err := NewBLSKeysMonitor(
+			cfg,
+			config.AlarmSnoozeConfig{},
+			&mock.OutputNotifiersHandlerStub{},
+			&mock.StatusHandlerStub{},
+		)
 		assert.Nil(t, err)
 		assert.NotNil(t, monitor)
 

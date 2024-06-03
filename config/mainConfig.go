@@ -12,6 +12,7 @@ type GeneralConfigs struct {
 	ApplicationName string
 	SystemSelfCheck SystemSelfCheckConfig
 	Logs            LogsConfig
+	AlarmSnooze     AlarmSnoozeConfig
 }
 
 // SystemSelfCheckConfig defines the configuration for the self check system
@@ -27,6 +28,13 @@ type SystemSelfCheckConfig struct {
 type LogsConfig struct {
 	LogFileLifeSpanInSec int
 	LogFileLifeSpanInMB  int
+}
+
+// AlarmSnoozeConfig defines the alarm snooze configuration
+type AlarmSnoozeConfig struct {
+	Enabled                          bool
+	NumNotificationsForEachFaultyKey uint32
+	SnoozeTimeInSec                  uint64
 }
 
 // OutputNotifiersConfig specifies the implemented types of output notifiers

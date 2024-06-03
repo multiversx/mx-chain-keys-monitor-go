@@ -10,6 +10,10 @@
     [General.Logs]
         LogFileLifeSpanInMB = 1024 # 1GB
         LogFileLifeSpanInSec = 86400 # 1 day
+    [General.AlarmSnooze]
+        Enabled = true
+        NumNotificationsForEachFaultyKey = 3
+        SnoozeTimeInSec = 86400 # 1 day
 
 [OutputNotifiers]
     NumRetries = 3

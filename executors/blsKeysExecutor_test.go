@@ -19,6 +19,7 @@ func TestNewBLSKeysExecutor(t *testing.T) {
 		ValidatorStatisticsQuerier: &mock.ValidatorStatisticsQuerierStub{},
 		StatusHandler:              &mock.StatusHandlerStub{},
 		BlsKeysFetcher:             &mock.BLSKEysFetcherStub{},
+		BLSKeysFilter:              &mock.BLSKeysFilterStub{},
 	}
 
 	t.Run("nil checker should error", func(t *testing.T) {
@@ -65,6 +66,15 @@ func TestNewBLSKeysExecutor(t *testing.T) {
 		executor, err := NewBLSKeysExecutor(localArgs)
 		assert.Nil(t, executor)
 		assert.Equal(t, errNilBLSKeysFetcher, err)
+	})
+	t.Run("nil BLS keys filter should error", func(t *testing.T) {
+		t.Parallel()
+
+		localArgs := testArgs
+		localArgs.BLSKeysFilter = nil
+		executor, err := NewBLSKeysExecutor(localArgs)
+		assert.Nil(t, executor)
+		assert.Equal(t, errNilBLSKeysFilter, err)
 	})
 	t.Run("should work", func(t *testing.T) {
 		t.Parallel()
@@ -121,6 +131,7 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 				},
 			},
 			BlsKeysFetcher: &mock.BLSKEysFetcherStub{},
+			BLSKeysFilter:  &mock.BLSKeysFilterStub{},
 		}
 		executor, _ := NewBLSKeysExecutor(args)
 		err := executor.Execute(context.Background())
@@ -162,6 +173,7 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 					return nil, expectedErr
 				},
 			},
+			BLSKeysFilter: &mock.BLSKeysFilterStub{},
 		}
 		executor, _ := NewBLSKeysExecutor(args)
 		err := executor.Execute(context.Background())
@@ -199,6 +211,7 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 				},
 			},
 			BlsKeysFetcher: &mock.BLSKEysFetcherStub{},
+			BLSKeysFilter:  &mock.BLSKeysFilterStub{},
 		}
 		executor, _ := NewBLSKeysExecutor(args)
 		err := executor.Execute(context.Background())
@@ -234,6 +247,7 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 				},
 			},
 			BlsKeysFetcher: &mock.BLSKEysFetcherStub{},
+			BLSKeysFilter:  &mock.BLSKeysFilterStub{},
 		}
 		executor, _ := NewBLSKeysExecutor(args)
 		err := executor.Execute(context.Background())
@@ -293,8 +307,9 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 					return []string{"extra key"}, nil
 				},
 			},
-			Name:        "executor test name",
-			ExplorerURL: "https://explorer.com",
+			BLSKeysFilter: &mock.BLSKeysFilterStub{},
+			Name:          "executor test name",
+			ExplorerURL:   "https://explorer.com",
 		}
 		executor, _ := NewBLSKeysExecutor(args)
 
@@ -325,6 +340,77 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 		assert.True(t, getAllBLSKeysCalled)
 		assert.Equal(t, expectedSlice, outputNotifierMessages)
 		assert.Equal(t, expectedSlice, statusHandlerMessages)
+	})
+	t.Run("should work for 2 problematic keys that are filtered out", func(t *testing.T) {
+		t.Parallel()
+
+		bls1 := "bls1"
+		bls2 := "bls2"
+
+		var outputNotifierMessages []core.OutputMessage
+		var statusHandlerMessages []core.OutputMessage
+		getAllBLSKeysCalled := false
+		args := ArgsBLSKeysExecutor{
+			OutputNotifiersHandler: &mock.OutputNotifiersHandlerStub{
+				NotifyWithRetryHandler: func(caller string, messages ...core.OutputMessage) error {
+					outputNotifierMessages = messages
+					assert.Equal(t, blsExecutorName, caller)
+
+					return nil
+				},
+			},
+			RatingsChecker: &mock.RatingsCheckerStub{
+				CheckHandler: func(statistics map[string]*core.ValidatorStatistics, extraBLSKeys []string) ([]core.CheckResponse, error) {
+					assert.Equal(t, []string{"extra key"}, extraBLSKeys)
+
+					return []core.CheckResponse{
+						{
+							HexBLSKey: bls1,
+							Status:    "status1",
+						},
+						{
+							HexBLSKey: bls2,
+							Status:    "status2",
+						},
+					}, nil
+				},
+			},
+			ValidatorStatisticsQuerier: &mock.ValidatorStatisticsQuerierStub{
+				QueryHandler: func(ctx context.Context) (map[string]*core.ValidatorStatistics, error) {
+					return nil, nil
+				},
+			},
+			StatusHandler: &mock.StatusHandlerStub{
+				ErrorEncounteredHandler: func(err error) {
+					assert.Fail(t, "should have not called error encountered")
+				},
+				CollectKeysProblemsHandler: func(messages []core.OutputMessage) {
+					statusHandlerMessages = messages
+				},
+			},
+			BlsKeysFetcher: &mock.BLSKEysFetcherStub{
+				GetAllBLSKeysHandler: func(ctx context.Context, sender string) ([]string, error) {
+					getAllBLSKeysCalled = true
+
+					return []string{"extra key"}, nil
+				},
+			},
+			BLSKeysFilter: &mock.BLSKeysFilterStub{
+				ShouldNotifyCalled: func(blsKey string) bool {
+					return false
+				},
+			},
+			Name:        "executor test name",
+			ExplorerURL: "https://explorer.com",
+		}
+		executor, _ := NewBLSKeysExecutor(args)
+
+		err := executor.Execute(context.Background())
+		assert.Nil(t, err)
+
+		assert.True(t, getAllBLSKeysCalled)
+		assert.Empty(t, outputNotifierMessages)
+		assert.Empty(t, statusHandlerMessages)
 	})
 	t.Run("should work for 2 problematic keys while the notifiers handler errors", func(t *testing.T) {
 		t.Parallel()
@@ -382,8 +468,9 @@ func TestBlsKeysExecutor_Execute(t *testing.T) {
 					return []string{"extra key"}, nil
 				},
 			},
-			Name:        "executor test name",
-			ExplorerURL: "https://explorer.com",
+			BLSKeysFilter: &mock.BLSKeysFilterStub{},
+			Name:          "executor test name",
+			ExplorerURL:   "https://explorer.com",
 		}
 		executor, _ := NewBLSKeysExecutor(args)
 
@@ -441,6 +528,7 @@ func TestCreateIdentifierURL(t *testing.T) {
 		ValidatorStatisticsQuerier: &mock.ValidatorStatisticsQuerierStub{},
 		StatusHandler:              &mock.StatusHandlerStub{},
 		BlsKeysFetcher:             &mock.BLSKEysFetcherStub{},
+		BLSKeysFilter:              &mock.BLSKeysFilterStub{},
 	}
 
 	t.Run("no explorer URL string defined should return empty", func(t *testing.T) {
