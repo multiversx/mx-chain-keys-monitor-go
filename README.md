@@ -33,7 +33,7 @@ You can choose to run this tool either in a Docker on in a systemd service.
 
 ### Docker Setup
 
-You need to have [docker](https://docs.docker.com/engine/install/) installed on your machine.
+You need to have [Docker](https://docs.docker.com/engine/install/) installed on your machine.
 
 Create a directory to save your configs in, and copy the 3 example files required for the tool to run :
 ```bash
@@ -50,7 +50,7 @@ Customize your 3 files :
 
 Build the image, use the Dockerfile ;
 ```bash
-docker buildx build -t mx-chain-keys-monitor-go:latest -f Dockerfile .
+sudo docker buildx build -t mx-chain-keys-monitor-go:latest -f Dockerfile .
 ```
 
 Then, edit the lines 7-9 in `./docker-compose.yml` :
@@ -64,7 +64,7 @@ If you want to provide extra arguments to the tool, add them under the `command`
 You're ready 🚀
 
 ```bash
-docker compose up -d
+sudo docker compose up -d
 ```
 
 
@@ -167,7 +167,7 @@ This file contains the general application configuration file.
         Enabled = true
         DayOfWeek = "every day" # can also be "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" and "Sunday"
         Hour = 12 # valid interval 0-23
-        Minute = 00 # valid interval 0-59
+        Minute = 0 # valid interval 0-59
         PollingIntervalInSec = 30
     [General.Logs]
         LogFileLifeSpanInMB = 1024 # 1GB
@@ -247,6 +247,18 @@ Examples here include `https://explorer.multiversx.com` for the mainnet,
   - The `ListFile` will contain the name of the file containing BLS or identity keys. Refer to the example file called 
 `network1.list` to check how keys/identities can be defined.
 
+### Notifiers test
+
+Before the application start, it is a good practice to test the configured notifiers
+```bash
+cd ~/mx-chain-keys-monitor-go/scripts
+./script.sh test_notifiers
+```
+
+If all enabled notifiers are configured correctly, no error messages should appear on the screen.
+
+**Important: This command won't start the monitoring process!**
+
 ### Application start
 
 After editing the required config files, the application can be started.
@@ -286,4 +298,9 @@ Also, if the application misbehaves, the logs can be retrieved by using this com
 ```bash
 cd ~/mx-chain-keys-monitor-go/scripts
 ./script.sh get_logs
+```
+
+If the application crashes and you have followed the installation via Docker, the command to retrieve the logs is as follows:
+```bash
+sudo docker logs -f mx-chain-keys-monitor-go
 ```
