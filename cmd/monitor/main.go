@@ -9,9 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/multiversx/mx-chain-core-go/core"
+	mxCore "github.com/multiversx/mx-chain-core-go/core"
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-keys-monitor-go/config"
+	"github.com/multiversx/mx-chain-keys-monitor-go/core"
 	"github.com/multiversx/mx-chain-keys-monitor-go/executors"
 	"github.com/multiversx/mx-chain-keys-monitor-go/factory"
 	logger "github.com/multiversx/mx-chain-logger-go"
@@ -64,7 +65,7 @@ func main() {
 	app := cli.NewApp()
 	cli.AppHelpTemplate = nodeHelpTemplate
 	app.Name = "MultiversX keys monitor tool"
-	machineID := core.GetAnonymizedMachineID(app.Name)
+	machineID := mxCore.GetAnonymizedMachineID(app.Name)
 
 	baseVersion := fmt.Sprintf("%s/%s/%s-%s", appVersion, runtime.Version(), runtime.GOOS, runtime.GOARCH)
 	app.Version = fmt.Sprintf("%s/%s", baseVersion, machineID)
@@ -74,6 +75,7 @@ func main() {
 		credentialsFile,
 		logLevel,
 		logSaveFile,
+		testNotifiers,
 	}
 	app.Authors = []cli.Author{
 		{
@@ -83,7 +85,7 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) error {
-		return startMonitorTool(c, baseVersion, log)
+		return startApplication(c, baseVersion, log)
 	}
 
 	err := app.Run(os.Args)
@@ -93,7 +95,7 @@ func main() {
 	}
 }
 
-func startMonitorTool(c *cli.Context, baseVersion string, log logger.Logger) error {
+func startApplication(c *cli.Context, baseVersion string, log logger.Logger) error {
 	workingDir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -119,23 +121,10 @@ func startMonitorTool(c *cli.Context, baseVersion string, log logger.Logger) err
 		}
 	}
 
-	log.Info("starting application...", "version", baseVersion)
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	err = startMonitoring(allConfigs)
+	err = execute(c, allConfigs, baseVersion, log)
 	if err != nil {
 		return err
 	}
-
-	<-sigs
-	log.Info("terminating at user's signal...")
-	statusHandler.SendCloseMessage()
-
-	time.Sleep(time.Second * 5)
-
-	closeAll(log)
 
 	if !check.IfNil(fileLogging) {
 		err = fileLogging.Close()
@@ -190,6 +179,63 @@ func attachFileLogger(log logger.Logger, workingDir string, isSaveLogFile bool, 
 	}
 
 	return fileLogging, nil
+}
+
+func execute(c *cli.Context, allConfigs config.AllConfigs, baseVersion string, log logger.Logger) error {
+	if c.GlobalBool(testNotifiers.Name) {
+		return testNotifiersCommand(allConfigs, log)
+	}
+
+	return startMonitoringTool(allConfigs, baseVersion, log)
+}
+
+func testNotifiersCommand(allConfigs config.AllConfigs, log logger.Logger) error {
+	log.Info("testing the configured notifiers")
+
+	notifiers, err := factory.CreateOutputNotifiers(allConfigs)
+	if err != nil {
+		return err
+	}
+
+	msg := core.OutputMessage{
+		Type:           core.InfoMessageOutputType,
+		ExecutorName:   allConfigs.Config.General.ApplicationName,
+		IdentifierType: fmt.Sprintf("Testing the notifiers. Timestamp %s", time.Now().Format("01-02-2006 15:04:05")),
+	}
+
+	for _, n := range notifiers {
+		log.Info("testing", "notifier", n.Name())
+		err = n.OutputMessages(msg)
+		if err != nil {
+			return err
+		}
+	}
+
+	log.Info("all enabled notifiers are configured correctly. The application will now close.")
+
+	return nil
+}
+
+func startMonitoringTool(allConfigs config.AllConfigs, baseVersion string, log logger.Logger) error {
+	log.Info("starting application...", "version", baseVersion)
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	err := startMonitoring(allConfigs)
+	if err != nil {
+		return err
+	}
+
+	<-sigs
+	log.Info("terminating at user's signal...")
+	statusHandler.SendCloseMessage()
+
+	time.Sleep(time.Second * 5)
+
+	closeAll(log)
+
+	return nil
 }
 
 func startMonitoring(allConfigs config.AllConfigs) error {

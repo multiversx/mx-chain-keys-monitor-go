@@ -32,4 +32,9 @@ var (
 		Name:  "log-save",
 		Usage: "Boolean option for enabling log saving. If set, it will automatically save all the logs into a file.",
 	}
+	// testNotifiers is used when trying to put the application in testing mode to try the configured notifiers
+	testNotifiers = cli.BoolFlag{
+		Name:  "test-notifiers",
+		Usage: "Boolean option testing out the notifiers. The application will send a message to all configured notifiers and will close.",
+	}
 )
