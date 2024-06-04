@@ -26,7 +26,7 @@ func TestLoadConfig(t *testing.T) {
     [General.AlarmSnooze]
         Enabled = true
         NumNotificationsForEachFaultyKey = 3
-        SnoozeTimeInSec = 86400 # 1 day
+        SnoozeTimeInSec = 28800 # 8 hours
 
 [OutputNotifiers]
     NumRetries = 3

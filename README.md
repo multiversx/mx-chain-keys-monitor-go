@@ -172,6 +172,10 @@ This file contains the general application configuration file.
     [General.Logs]
         LogFileLifeSpanInMB = 1024 # 1GB
         LogFileLifeSpanInSec = 86400 # 1 day
+    [General.AlarmSnooze]
+        Enabled = true
+        NumNotificationsForEachFaultyKey = 3
+        SnoozeTimeInSec = 28800 # 8 hours
 
 [OutputNotifiers]
     NumRetries = 3
@@ -217,6 +221,9 @@ that will output a notification message once a day or week, depending on the con
 
   - The `General.Logs` will configure the internal logging system (for debugging purposes).
 
+  - The `General.AlarmSnooze` section will configure the number of the notify events for each monitored 
+BLS key that is faulty and the time "snooze" duration time, in seconds. If disabled, all the notification 
+events will be pushed to the notifiers after each rating drop checks.
 
 * The `OutputNotifiers` is the section containing the implemented notifiers. 
 There are 3 types of notifiers implemented: `Pushover`, `Smtp` and `Telegram`, each with its configuration sections.
