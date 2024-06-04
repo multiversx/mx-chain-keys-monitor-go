@@ -89,7 +89,7 @@ func TestLoadConfig(t *testing.T) {
 			AlarmSnooze: AlarmSnoozeConfig{
 				Enabled:                          true,
 				NumNotificationsForEachFaultyKey: 3,
-				SnoozeTimeInSec:                  86400,
+				SnoozeTimeInSec:                  28800,
 			},
 		},
 		OutputNotifiers: OutputNotifiersConfig{
