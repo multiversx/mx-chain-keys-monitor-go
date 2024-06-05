@@ -88,7 +88,12 @@ func TestBlsKeysNotifier(t *testing.T) {
 	notifiersHandler, err := executors.NewNotifiersHandler(argsNotifiersHandler)
 	assert.Nil(t, err)
 
-	monitor, err := factory.NewBLSKeysMonitor(cfg, notifiersHandler, errorHandler)
+	monitor, err := factory.NewBLSKeysMonitor(
+		cfg,
+		config.AlarmSnoozeConfig{},
+		notifiersHandler,
+		errorHandler,
+	)
 	assert.Nil(t, err)
 
 	time.Sleep(time.Second * 3)
