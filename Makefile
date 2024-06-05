@@ -1,3 +1,7 @@
+KEYS_MONITOR_IMAGE_NAME=keysmonitor
+KEYS_MONITOR_IMAGE_NAME_TAG=latest
+DOCKER_FILE=Dockerfile
+
 test:
 	@echo "  >  Running unit tests"
 	go test -cover -race -coverprofile=coverage.txt -covermode=atomic -v ./...
@@ -27,3 +31,9 @@ check-cli-md:
     		echo "Error - please update all CLI.md files by running the 'cli-docs' or 'check-cli-md' from Makefile!"; \
     		exit 1; \
     	fi
+
+docker-build:
+	docker build \
+		 -t ${KEYS_MONITOR_IMAGE_NAME}:${KEYS_MONITOR_IMAGE_NAME_TAG} \
+		 -f ${DOCKER_FILE} \
+		 .

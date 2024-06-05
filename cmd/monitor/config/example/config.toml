@@ -49,7 +49,34 @@
     PollingIntervalInSeconds = 300  # 5 minutes
     ListFile = "./config/network1.list"
 
-# To another networks, un-comment below and add more sections like this
+# Examples on how to configure 3 existing public chains
+#
+#[[BLSKeysMonitoring]]
+#    AlarmDeltaRatingDrop = 1.0 # maximum Rating-TempRating value that will trigger an alarm
+#    Name = "Mainnet"
+#    ApiURL = "https://api.multiversx.com"
+#    ExplorerURL = "https://explorer.multiversx.com"
+#    PollingIntervalInSeconds = 300  # 5 minutes
+#    ListFile = "./config/mainnet.list"
+#
+#[[BLSKeysMonitoring]]
+#    AlarmDeltaRatingDrop = 3.0 # maximum Rating-TempRating value that will trigger an alarm
+#    Name = "Testnet"
+#    ApiURL = "https://testnet-api.multiversx.com"
+#    ExplorerURL = "https://testnet-explorer.multiversx.com"
+#    PollingIntervalInSeconds = 300  # 5 minutes
+#    ListFile = "./config/testnet.list"
+#
+#[[BLSKeysMonitoring]]
+#    AlarmDeltaRatingDrop = 1.0 # maximum Rating-TempRating value that will trigger an alarm
+#    Name = "Devnet"
+#    ApiURL = "https://devnet-api.multiversx.com"
+#    ExplorerURL = "https://devnet-explorer.multiversx.com"
+#    PollingIntervalInSeconds = 300  # 5 minutes
+#    ListFile = "./config/devnet.list"
+#
+#
+# To other networks, un-comment below and add more sections like this
 #[[BLSKeysMonitoring]]
 #    AlarmDeltaRatingDrop = 1.0 # maximum Rating-TempRating value that will trigger an alarm, for the public testnet might use a higher value (2 or 3)
 #    Name = "network 2"

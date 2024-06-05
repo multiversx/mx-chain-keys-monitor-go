@@ -105,7 +105,7 @@ cd ~/mx-chain-keys-monitor-go/scripts
 # the following init call will create ~/mx-chain-keys-monitor-go/scripts/config/local.cfg file
 # and will copy the configs from ~/mx-chain-keys-monitor-go/cmd/monitor/config/example to ~/mx-chain-keys-monitor-go/cmd/monitor/config
 # to avoid github pull problems
-script.sh init
+./script.sh init
 cd config
 # edit the local.cfg file for the scripts setup
 nano local.cfg

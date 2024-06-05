@@ -26,6 +26,7 @@ COPY --from=usermanager /etc/passwd /etc/passwd
 COPY --from=usermanager /etc/group /etc/group
 USER ${USERNAME}
 WORKDIR /home/mx
+RUN mkdir -p /home/mx/config
 COPY --chown=${UID}:${GID} --from=builder /src/cmd/monitor/monitor /home/mx/monitor
 ENTRYPOINT [ "/home/mx/monitor" ]
 
