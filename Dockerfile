@@ -25,7 +25,9 @@ COPY --from=usermanager /etc/ssl/certs /etc/ssl/certs
 COPY --from=usermanager /etc/passwd /etc/passwd
 COPY --from=usermanager /etc/group /etc/group
 RUN mkdir -p /home/mx/config
+RUN mkdir -p /home/mx/logs
 RUN chown ${USERNAME} /home/mx/config
+RUN chown ${USERNAME} /home/mx/logs
 USER ${USERNAME}
 WORKDIR /home/mx
 COPY --chown=${UID}:${GID} --from=builder /src/cmd/monitor/monitor /home/mx/monitor
