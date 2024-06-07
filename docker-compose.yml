@@ -1,13 +1,10 @@
 services:
   mx-chain-keys-monitor-go:
-    image: mx-chain-keys-monitor-go:latest
+    image: multiversx/keysmonitor:latest
     container_name: mx-chain-keys-monitor-go
     volumes:
-      - ./cmd/monitor/config/example/config.toml:/config.toml:ro
-      - ./cmd/monitor/config/example/credentials.toml:/credentials.toml:ro
-      - ./cmd/monitor/config/example/network1.list:/network1.list:ro
-    restart: always
-    command: 
-      - '--config=/config.toml'
-      - '--credentials=/credentials.toml'
+      - ./cmd/monitor/config/:/home/mx/config:ro
+    restart: unless-stopped
+    command:
       - '-log-level=*:DEBUG'
+      - '-log-save'

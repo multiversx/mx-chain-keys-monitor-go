@@ -95,6 +95,14 @@ func TestListParser_ParseFile(t *testing.T) {
 				Hex:    "102a8ba34fce6f9be3b83d159eaae3a1cb8cabd9e31c6d92bb21d940251a9df8",
 				Bech32: "erd1zq4ghg60eehehcac852ea2hr589ce27euvwxmy4my8v5qfg6nhuq99r9ez",
 			},
+			{
+				Hex:    "0000000000000000000100000000000000000000000000000000000003ffffff",
+				Bech32: "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqlllllskf06ky",
+			},
+			{
+				Hex:    "0000000000000000000100000000000000000000000000000000000002ffffff",
+				Bech32: "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqhllllsajxzat",
+			},
 		}
 		assert.Equal(t, expectedAddresses, result.Addresses)
 	})

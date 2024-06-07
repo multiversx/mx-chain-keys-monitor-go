@@ -18,57 +18,22 @@ and the application will automatically fetch the registered BLS keys for that id
     - [x] Automatically fetch the BLS keys staked by an address
     - [x] Threshold definition on each set for the allowed rating drop
     - [x] Configurable polling time for each definition set
+    - [x] Alarm snooze support: the faulty key(s) can emit only a specified number of messages, if desired 
 - [x] Notification system
-    - [x] Integrated the [Pushover](https://pushover.net/) service to allow easy access to push-notifications on mobile devices
+    - [x] Integrated the [Pushover](https://pushover.net/) service to allow easy access to push-notifications on mobile devices with multiple accounts support
     - [x] Integrated the SMTP email service to notify thorough emails the events encountered
-    - [X] Integrated the [Telegram bot](https://core.telegram.org/bots) notification service 
+    - [X] Integrated the [Telegram bot](https://core.telegram.org/bots) notification service with multiple bots support
 - [x] System self-check messages
     - [x] Integrated a self-check system that can periodically send messages on the status of the app
 - [x] Scripts & installation support
     - [x] Added scripts for easy setup & upgrade
+    - [x] Added Docker image build & scripts
 
 ## Installation
 
 You can choose to run this tool either in a Docker on in a systemd service.
 
-### Docker Setup
-
-You need to have [Docker](https://docs.docker.com/engine/install/) installed on your machine.
-
-Create a directory to save your configs in, and copy the 3 example files required for the tool to run :
-```bash
-mkdir <config_dir>
-cp ./cmd/monitor/config/example/config.toml <config_dir>/config.toml
-cp ./cmd/monitor/config/example/credentials.toml <config_dir>/credentials.toml
-cp ./cmd/monitor/config/example/network1.list <config_dir>/network1.list
-```
-
-Customize your 3 files :
-- config.toml is the tool global configuration
-- credentials.toml is where you save your secrets 
-- network1.list is where you fill your addresses to monitor (⚠️ this file will be located in /network1.list in the container, **make sure to make this path correspond in the config.toml file** ⚠️)
-
-Build the image, use the Dockerfile ;
-```bash
-sudo docker buildx build -t mx-chain-keys-monitor-go:latest -f Dockerfile .
-```
-
-Then, edit the lines 7-9 in `./docker-compose.yml` :
-- `<path>/<to>/<your>/config.toml:/config.toml:ro`
-- `<path>/<to>/<your>/credentials.toml:/credentials.toml:ro`
-- `<path>/<to>/<your>/network1.list:/network1.list:ro`
-- You can append more networkX.list files if you want to 
-
-If you want to provide extra arguments to the tool, add them under the `command` object.
-
-You're ready 🚀
-
-```bash
-sudo docker compose up -d
-```
-
-
-### Initial setup
+### Initial setup (valid for all types of installation)
 
 Although it's possible, it is not recommended to run the application as `root`. For that reason, a new user is required to be created.
 For example, the following script creates a new user called `ubuntu`. This script can be run as `root`.
@@ -96,7 +61,34 @@ ubuntu  ALL=(ALL) NOPASSWD:ALL
 # save & exit
 ```
 
-### Repo clone & scripts init
+### Variant A: how to set up using Docker
+
+You need to have [Docker](https://docs.docker.com/engine/install/) installed on your machine.
+
+Copy the template configs from the `example` directory:
+```bash
+cd
+git clone https://github.com/multiversx/mx-chain-keys-monitor-go
+cd mx-chain-keys-monitor-go
+cp ./cmd/monitor/config/example/* ./cmd/monitor/config
+```
+
+Customize your config files from the `./cmd/monitor/config` directory:
+- config.toml is the tool's global configuration file
+- credentials.toml is where you save your secrets
+- network1.list / mainnet.list / testnet.list / devnet.list are the files used to specify the monitored addresses.
+  Configure them as best suit you. The config.toml file contains 3 commented sections regarding the 3 existing public chains
+
+Fetch the image & start it, using the docker-compose.yml file:
+```bash
+sudo docker compose -f ./docker-compose.yml up -d mx-chain-keys-monitor-go
+```
+
+You're ready 🚀
+
+### Variant B: how to set up using regular bash scripts (using service file)
+
+#### 1. Repo clone & scripts init
 
 ```bash
 cd
@@ -105,13 +97,13 @@ cd ~/mx-chain-keys-monitor-go/scripts
 # the following init call will create ~/mx-chain-keys-monitor-go/scripts/config/local.cfg file
 # and will copy the configs from ~/mx-chain-keys-monitor-go/cmd/monitor/config/example to ~/mx-chain-keys-monitor-go/cmd/monitor/config
 # to avoid github pull problems
-script.sh init
+./script.sh init
 cd config
 # edit the local.cfg file for the scripts setup
 nano local.cfg
 ```
 
-### local.cfg configuration
+#### 2. local.cfg configuration
 
 The generated local.cfg file contains the following lines:
 
@@ -140,7 +132,7 @@ The complete list of the cli command can be found [here](./cmd/monitor/CLI.md)
 The `OVERRIDE_VER` can be used during testing to manually specify an override tag/branch that will be used when building 
 the application. If left empty, the upgrade process will automatically fetch and use the latest release.
 
-### Install
+#### 3. Install
 
 After the `local.cfg` configuration step, the scripts can now install the application.
 ```bash
@@ -148,7 +140,7 @@ cd ~/mx-chain-keys-monitor-go/scripts
 ./script.sh install
 ```
 
-### Application config
+#### 4. Application config
 
 After the application has been installed, it is now time to configure it.
 For this, you should edit the `config.toml` and `credentials.toml` files and add files containing lists of BLS keys or addresses in the 
@@ -254,7 +246,7 @@ Examples here include `https://explorer.multiversx.com` for the mainnet,
   - The `ListFile` will contain the name of the file containing BLS or identity keys. Refer to the example file called 
 `network1.list` to check how keys/identities can be defined.
 
-### Notifiers test
+#### 5. Notifiers test
 
 Before the application start, it is a good practice to test the configured notifiers
 ```bash
@@ -266,7 +258,7 @@ If all enabled notifiers are configured correctly, no error messages should appe
 
 **Important: This command won't start the monitoring process!**
 
-### Application start
+#### 6. Application start
 
 After editing the required config files, the application can be started.
 ```bash
@@ -277,7 +269,7 @@ cd ~/mx-chain-keys-monitor-go/scripts
 When the application starts, it automatically emits a notification message. This is valid also for the `stop` operation 
 issued by the `./script.sh stop` command.
 
-### Backup and upgrade
+#### 7. Backup and upgrade
 
 It is a good practice to save the .toml, .list and the local.cfg files somewhere else just in case the application is cleaned up accidentally.
 The upgrade call for the monitor app is done through this command:
@@ -286,7 +278,7 @@ cd ~/mx-chain-keys-monitor-go/scripts
 ./script.sh upgrade
 ```
 
-### Uninstalling
+#### 8. Uninstalling
 
 The application can be removed by executing the following script:
 ```bash
@@ -307,7 +299,7 @@ cd ~/mx-chain-keys-monitor-go/scripts
 ./script.sh get_logs
 ```
 
-If the application crashes and you have followed the installation via Docker, the command to retrieve the logs is as follows:
+If the application crashes, and you have followed the installation via Docker, the command to retrieve the logs is as follows:
 ```bash
 sudo docker logs -f mx-chain-keys-monitor-go
 ```

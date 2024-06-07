@@ -34,6 +34,7 @@ func (parser *listParser) ParseFile(filename string) (*core.IdentitiesHolder, er
 	spitLines := strings.Split(string(dataFile), "\n")
 	for index, line := range spitLines {
 		line = strings.TrimSpace(line)
+		line = strings.Trim(line, ",.;")
 		if len(line) == 0 {
 			continue
 		}
