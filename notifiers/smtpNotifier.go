@@ -66,7 +66,7 @@ func (notifier *smtpNotifier) OutputMessages(messages ...core.OutputMessage) err
 			maxMessageOutputType = msg.Type
 		}
 
-		msgString += createMessageString(msg) + htmlLineBreak
+		msgString += createMessageString(msg, httpBoldFormat, httpBoldedLinkFormat) + htmlLineBreak
 	}
 
 	title := createTitle(maxMessageOutputType, messages[0].ExecutorName)

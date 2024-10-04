@@ -44,6 +44,7 @@ type OutputNotifiersConfig struct {
 	Pushover              PushoverNotifierConfig
 	Smtp                  SmtpNotifierConfig
 	Telegram              TelegramNotifierConfig
+	Slack                 SlackNotifierConfig
 }
 
 // PushoverNotifierConfig specifies the options for the Pushover service
@@ -62,6 +63,12 @@ type SmtpNotifierConfig struct {
 
 // TelegramNotifierConfig specifies the options for the Telegram service
 type TelegramNotifierConfig struct {
+	Enabled bool
+	URL     string
+}
+
+// SlackNotifierConfig specifies the options for the Slack service
+type SlackNotifierConfig struct {
 	Enabled bool
 	URL     string
 }

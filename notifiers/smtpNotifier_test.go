@@ -104,7 +104,7 @@ Content-Type: text/html; charset="UTF-8";
 <body>
    ✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
 
-<br>✅ info10 <b></b>
+<br>✅ info10 
 
 <br>✅  <b>info20</b>
 
@@ -161,7 +161,7 @@ Content-Type: text/html; charset="UTF-8";
 <body>
    ✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
 
-<br>✅ info10 <b></b>
+<br>✅ info10 
 
 <br>⚠️  <b>info20</b>
 
@@ -219,7 +219,7 @@ Content-Type: text/html; charset="UTF-8";
 <body>
    🚨 info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
 
-<br>✅ info10 <b></b>
+<br>✅ info10 
 
 <br>⚠️  <b>info20</b>
 
@@ -277,7 +277,7 @@ Content-Type: text/html; charset="UTF-8";
 <body>
     info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
 
-<br> info10 <b></b>
+<br> info10 
 
 <br>  <b>info20</b>
 

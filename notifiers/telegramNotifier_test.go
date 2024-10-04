@@ -126,7 +126,7 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		expectedTitle := "ⓘ Info for executor"
 		expectedMessage := `✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
 
-✅ info10 <b></b>
+✅ info10 
 
 ✅  <b>info20</b>
 
@@ -169,7 +169,7 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		expectedTitle := "⚠️ Warnings occurred on executor"
 		expectedMessage := `✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
 
-✅ info10 <b></b>
+✅ info10 
 
 ⚠️  <b>info20</b>
 
@@ -212,7 +212,7 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		expectedTitle := "🚨 Problems occurred on executor"
 		expectedMessage := `🚨 info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
 
-✅ info10 <b></b>
+✅ info10 
 
 ⚠️  <b>info20</b>
 
@@ -255,7 +255,7 @@ func TestTelegramNotifier_OutputMessages(t *testing.T) {
 		expectedTitle := "executor"
 		expectedMessage := ` info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
 
- info10 <b></b>
+ info10 
 
   <b>info20</b>
 
