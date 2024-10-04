@@ -23,6 +23,7 @@ and the application will automatically fetch the registered BLS keys for that id
     - [x] Integrated the [Pushover](https://pushover.net/) service to allow easy access to push-notifications on mobile devices with multiple accounts support
     - [x] Integrated the SMTP email service to notify thorough emails the events encountered
     - [X] Integrated the [Telegram bot](https://core.telegram.org/bots) notification service with multiple bots support
+    - [X] Integrated the [Slack webhooks](https://api.slack.com/messaging/webhooks) notification service with multiple channels support
 - [x] System self-check messages
     - [x] Integrated a self-check system that can periodically send messages on the status of the app
 - [x] Scripts & installation support
