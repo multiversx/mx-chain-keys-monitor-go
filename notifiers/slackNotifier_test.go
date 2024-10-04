@@ -2,6 +2,7 @@ package notifiers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -12,33 +13,17 @@ import (
 	"github.com/multiversx/mx-chain-keys-monitor-go/core"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-const testToken = "test-token"
-const testUserKey = "test-user-key"
+const testSlackSecret = "test-token"
 
-var testInfoMessage = core.OutputMessage{
-	Type:               core.InfoMessageOutputType,
-	IdentifierType:     "info1",
-	ExecutorName:       "executor",
-	Identifier:         "info2",
-	ShortIdentifier:    "info3",
-	IdentifierURL:      "https://examples.com/info3",
-	ProblemEncountered: "problem1",
-}
-
-func createHttpTestServerThatRespondsOK(
+func createHttpTestServerThatRespondsOKForSlack(
 	t *testing.T,
 	expectedMessage string,
 	expectedTitle string,
 	numCalls *uint32,
 ) *httptest.Server {
-	response := &pushoverResponse{
-		Status:  1,
-		Request: "e43a9e0f-6836-42f1-8b06-e8bc56012637",
-	}
-	responseBytes, _ := json.Marshal(response)
-
 	return httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		body := req.Body
 		defer func() {
@@ -49,47 +34,45 @@ func createHttpTestServerThatRespondsOK(
 		numRead, _ := body.Read(buff)
 		buff = buff[:numRead]
 
-		request := &pushoverRequest{}
+		request := &slackRequest{}
 		err := json.Unmarshal(buff, request)
 		assert.Nil(t, err)
 
-		assert.Equal(t, testToken, request.Token)
-		assert.Equal(t, testUserKey, request.User)
-		assert.Equal(t, 1, request.HTML)
-		assert.Equal(t, expectedMessage, request.Message)
-		assert.Equal(t, expectedTitle, request.Title)
+		messageString := fmt.Sprintf("%s\n\n%s", expectedTitle, expectedMessage)
+		assert.Equal(t, messageString, request.Text)
+
+		assert.Contains(t, req.URL.Path, testSlackSecret)
 
 		rw.WriteHeader(http.StatusOK)
-		_, _ = rw.Write(responseBytes)
 		atomic.AddUint32(numCalls, 1)
 	}))
 }
 
-func TestNewPushoverNotifier(t *testing.T) {
+func TestNewSlackNotifier(t *testing.T) {
 	t.Parallel()
 
-	notifier := NewPushoverNotifier("url", "", "")
-	assert.NotNil(t, notifier)
+	notifier := NewSlackNotifier("", "")
+	require.NotNil(t, notifier)
 }
 
-func TestPushoverNotifier_IsInterfaceNil(t *testing.T) {
+func TestSlackNotifier_IsInterfaceNil(t *testing.T) {
 	t.Parallel()
 
-	var instance *pushoverNotifier
+	var instance *slackNotifier
 	assert.True(t, instance.IsInterfaceNil())
 
-	instance = &pushoverNotifier{}
+	instance = &slackNotifier{}
 	assert.False(t, instance.IsInterfaceNil())
 }
 
-func TestPushoverNotifier_Name(t *testing.T) {
+func TestSlackNotifier_Name(t *testing.T) {
 	t.Parallel()
 
-	notifier := NewPushoverNotifier("url", "", "")
-	assert.Equal(t, "*notifiers.pushoverNotifier", notifier.Name())
+	notifier := NewSlackNotifier("url", "")
+	assert.Equal(t, "*notifiers.slackNotifier", notifier.Name())
 }
 
-func TestPushoverNotifier_OutputMessages(t *testing.T) {
+func TestSlackNotifier_OutputMessages(t *testing.T) {
 	t.Parallel()
 
 	t.Run("sending empty slice of messages should not call the service", func(t *testing.T) {
@@ -98,10 +81,10 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 		numCalls := uint32(0)
 		expectedTitle := ""
 		expectedMessage := ""
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForSlack(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewSlackNotifier(testServer.URL, testSlackSecret)
 		err := notifier.OutputMessages()
 		assert.Nil(t, err)
 
@@ -111,7 +94,7 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 	t.Run("post method fails should error", func(t *testing.T) {
 		t.Parallel()
 
-		notifier := NewPushoverNotifier("not-a-server-URL", "", "")
+		notifier := NewSlackNotifier("not-a-server-URL", "")
 		err := notifier.OutputMessages(testInfoMessage)
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "not-a-server-URL")
@@ -123,25 +106,9 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 			rw.WriteHeader(http.StatusInternalServerError)
 		}))
 
-		notifier := NewPushoverNotifier(testHttpServer.URL, "", "")
+		notifier := NewSlackNotifier(testHttpServer.URL, "")
 		err := notifier.OutputMessages(testInfoMessage)
 		assert.ErrorIs(t, err, errReturnCodeIsNotOk)
-	})
-	t.Run("http post response is not OK, should error", func(t *testing.T) {
-		t.Parallel()
-
-		testHttpServer := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-			rw.WriteHeader(http.StatusOK)
-			_, _ = rw.Write([]byte("not-a-valid-json"))
-		}))
-
-		notifier := NewPushoverNotifier(testHttpServer.URL, "", "")
-		err := notifier.OutputMessages(testInfoMessage)
-		assert.NotNil(t, err)
-		assert.Contains(t, err.Error(), "invalid character")
-
-		// make sure any accidental calls on API endpoint routes are caught by the test server
-		time.Sleep(time.Second)
 	})
 	t.Run("sending info messages should work", func(t *testing.T) {
 		t.Parallel()
@@ -168,18 +135,18 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 
 		numCalls := uint32(0)
 		expectedTitle := "ⓘ Info for executor"
-		expectedMessage := `✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+		expectedMessage := `✅ info1 *<https://examples.com/info3|info3>*: problem1
 
 ✅ info10 
 
-✅  <b>info20</b>
+✅  *info20*
 
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForSlack(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewSlackNotifier(testServer.URL, testSlackSecret)
 		err := notifier.OutputMessages(msg1, msg2, msg3)
 		assert.Nil(t, err)
 
@@ -211,18 +178,18 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 
 		numCalls := uint32(0)
 		expectedTitle := "⚠️ Warnings occurred on executor"
-		expectedMessage := `✅ info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+		expectedMessage := `✅ info1 *<https://examples.com/info3|info3>*: problem1
 
 ✅ info10 
 
-⚠️  <b>info20</b>
+⚠️  *info20*
 
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForSlack(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewSlackNotifier(testServer.URL, testSlackSecret)
 		err := notifier.OutputMessages(msg1, msg2, msg3)
 		assert.Nil(t, err)
 
@@ -254,18 +221,18 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 
 		numCalls := uint32(0)
 		expectedTitle := "🚨 Problems occurred on executor"
-		expectedMessage := `🚨 info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+		expectedMessage := `🚨 info1 *<https://examples.com/info3|info3>*: problem1
 
 ✅ info10 
 
-⚠️  <b>info20</b>
+⚠️  *info20*
 
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForSlack(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewSlackNotifier(testServer.URL, testSlackSecret)
 		err := notifier.OutputMessages(msg1, msg2, msg3)
 		assert.Nil(t, err)
 
@@ -297,18 +264,18 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 
 		numCalls := uint32(0)
 		expectedTitle := "executor"
-		expectedMessage := ` info1 <b><a href="https://examples.com/info3">info3</a></b>: problem1
+		expectedMessage := ` info1 *<https://examples.com/info3|info3>*: problem1
 
  info10 
 
-  <b>info20</b>
+  *info20*
 
 `
 
-		testServer := createHttpTestServerThatRespondsOK(t, expectedMessage, expectedTitle, &numCalls)
+		testServer := createHttpTestServerThatRespondsOKForSlack(t, expectedMessage, expectedTitle, &numCalls)
 		defer testServer.Close()
 
-		notifier := NewPushoverNotifier(testServer.URL, testToken, testUserKey)
+		notifier := NewSlackNotifier(testServer.URL, testSlackSecret)
 		err := notifier.OutputMessages(msg1, msg2, msg3)
 		assert.Nil(t, err)
 
@@ -317,19 +284,17 @@ func TestPushoverNotifier_OutputMessages(t *testing.T) {
 	})
 }
 
-func TestPushoverNotifier_FunctionalTest(t *testing.T) {
-	pushoverToken := os.Getenv("PUSHOVER_TOKEN")
-	pushoverUserKey := os.Getenv("PUSHOVER_USERKEY")
-	if len(pushoverToken) == 0 || len(pushoverUserKey) == 0 {
-		t.Skip("this is a functional test, will need real credentials. Please define your environment variables PUSHOVER_TOKEN and PUSHOVER_USERKEY so this test can work")
+func TestSlackNotifier_FunctionalTest(t *testing.T) {
+	slackAppSecret := os.Getenv("SLACK_APP_SECRET")
+	if len(slackAppSecret) == 0 {
+		t.Skip("this is a functional test, will need real credentials. Please define your environment variable SLACK_APP_SECRET so this test can work")
 	}
 
 	_ = logger.SetLogLevel("*:DEBUG")
 
-	notifier := NewPushoverNotifier(
-		"https://api.pushover.net/1/messages.json",
-		pushoverToken,
-		pushoverUserKey,
+	notifier := NewSlackNotifier(
+		"https://hooks.slack.com/services",
+		slackAppSecret,
 	)
 
 	t.Run("info messages", func(t *testing.T) {

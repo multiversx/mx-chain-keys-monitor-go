@@ -41,6 +41,12 @@
         Enabled = false
         URL = "https://api.telegram.org"
 
+    # Uses Slack service that can notify Slack app. Requires an app and the credentials.
+    # If you enable this notifier, remember to specify the credentials in credentials.toml file
+    [OutputNotifiers.Slack]
+        Enabled = false
+        URL = "https://hooks.slack.com/services"
+
 [[BLSKeysMonitoring]]
     AlarmDeltaRatingDrop = 1.0 # maximum Rating-TempRating value that will trigger an alarm, for the public testnet might use a higher value (2 or 3)
     Name = "network 1"

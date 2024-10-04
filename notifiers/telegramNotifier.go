@@ -38,7 +38,7 @@ func (notifier *telegramNotifier) OutputMessages(messages ...core.OutputMessage)
 			maxMessageOutputType = msg.Type
 		}
 
-		msgString += createMessageString(msg)
+		msgString += createMessageString(msg, httpBoldFormat, httpBoldedLinkFormat)
 	}
 
 	title := createTitle(maxMessageOutputType, messages[0].ExecutorName)

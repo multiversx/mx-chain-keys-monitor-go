@@ -23,6 +23,7 @@ and the application will automatically fetch the registered BLS keys for that id
     - [x] Integrated the [Pushover](https://pushover.net/) service to allow easy access to push-notifications on mobile devices with multiple accounts support
     - [x] Integrated the SMTP email service to notify thorough emails the events encountered
     - [X] Integrated the [Telegram bot](https://core.telegram.org/bots) notification service with multiple bots support
+    - [X] Integrated the [Slack webhooks](https://api.slack.com/messaging/webhooks) notification service with multiple channels support
 - [x] System self-check messages
     - [x] Integrated a self-check system that can periodically send messages on the status of the app
 - [x] Scripts & installation support
@@ -195,6 +196,12 @@ This file contains the general application configuration file.
         Enabled = false
         URL = "https://api.telegram.org"
 
+    # Uses Slack service that can notify Slack app. Requires an app and the credentials.
+    # If you enable this notifier, remember to specify the credentials in credentials.toml file
+    [OutputNotifiers.Slack]
+        Enabled = false
+        URL = "https://hooks.slack.com/services"
+
 [[BLSKeysMonitoring]]
     AlarmDeltaRatingDrop = 1.0 # maximum Rating-TempRating value that will trigger an alarm, for the public testnet might use a higher value (2 or 3)
     Name = "network 1"
@@ -218,7 +225,7 @@ BLS key that is faulty and the time "snooze" duration time, in seconds. If disab
 events will be pushed to the notifiers after each rating drop checks.
 
 * The `OutputNotifiers` is the section containing the implemented notifiers. 
-There are 3 types of notifiers implemented: `Pushover`, `Smtp` and `Telegram`, each with its configuration sections.
+There are 4 types of notifiers implemented: `Pushover`, `Smtp`, `Telegram` and `Slack`, each with its configuration sections.
 The credentials for the notifiers are defined separately in the `credentials.toml` so that is the place where 
 passwords or access tokens will be specified.
 

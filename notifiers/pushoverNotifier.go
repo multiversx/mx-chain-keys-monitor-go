@@ -11,7 +11,11 @@ import (
 	httpSDK "github.com/multiversx/mx-sdk-go/core/http"
 )
 
-const maxSendTimeout = time.Second * 30
+const (
+	maxSendTimeout       = time.Second * 30
+	httpBoldFormat       = "<b>%s</b>"
+	httpBoldedLinkFormat = `<b><a href="%s">%s</a></b>`
+)
 
 var log = logger.GetOrCreate("notifiers")
 
@@ -57,7 +61,7 @@ func (notifier *pushoverNotifier) OutputMessages(messages ...core.OutputMessage)
 			highestMessageOutputType = msg.Type
 		}
 
-		msgString += createMessageString(msg)
+		msgString += createMessageString(msg, httpBoldFormat, httpBoldedLinkFormat)
 	}
 
 	title := createTitle(highestMessageOutputType, messages[0].ExecutorName)
@@ -70,8 +74,12 @@ func (notifier *pushoverNotifier) OutputMessages(messages ...core.OutputMessage)
 	return nil
 }
 
-func createMessageString(msg core.OutputMessage) string {
-	identifier := processIdentifier(msg)
+func createMessageString(
+	msg core.OutputMessage,
+	boldFormat string,
+	linkFormat string,
+) string {
+	identifier := processIdentifier(msg, boldFormat, linkFormat)
 	iconString := getIconString(msg)
 
 	if len(msg.ProblemEncountered) == 0 {
@@ -109,12 +117,20 @@ func createTitle(maxMessageOutputType core.MessageOutputType, executor string) s
 	}
 }
 
-func processIdentifier(msg core.OutputMessage) string {
+func processIdentifier(
+	msg core.OutputMessage,
+	boldFormat string,
+	linkFormat string,
+) string {
 	if len(msg.IdentifierURL) == 0 {
-		return fmt.Sprintf("<b>%s</b>", msg.ShortIdentifier)
+		if len(msg.ShortIdentifier) == 0 {
+			return ""
+		}
+
+		return fmt.Sprintf(boldFormat, msg.ShortIdentifier)
 	}
 
-	return fmt.Sprintf(`<b><a href="%s">%s</a></b>`, msg.IdentifierURL, msg.ShortIdentifier)
+	return fmt.Sprintf(linkFormat, msg.IdentifierURL, msg.ShortIdentifier)
 }
 
 func (notifier *pushoverNotifier) pushNotification(msgString string, title string) error {

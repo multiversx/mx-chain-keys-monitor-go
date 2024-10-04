@@ -54,6 +54,11 @@ func TestLoadConfig(t *testing.T) {
         Enabled = true
         URL = "https://api.telegram.org"
 
+    # Uses Slack service that can notify Slack app. Requires an app and the credentials.
+    # If you enable this notifier, remember to specify the credentials in credentials.toml file
+    [OutputNotifiers.Slack]
+        Enabled = true
+        URL = "https://hooks.slack.com/services"
 
 [[BLSKeysMonitoring]]
     AlarmDeltaRatingDrop = 1.0 # maximum Rating-TempRating value that will trigger an alarm, for the public testnet might use a higher value (2 or 3)
@@ -109,6 +114,10 @@ func TestLoadConfig(t *testing.T) {
 				Enabled: true,
 				URL:     "https://api.telegram.org",
 			},
+			Slack: SlackNotifierConfig{
+				Enabled: true,
+				URL:     "https://hooks.slack.com/services",
+			},
 		},
 		BLSKeysMonitoring: []BLSKeysMonitorConfig{
 			{
@@ -160,6 +169,13 @@ func TestLoadCredentialsConfig(t *testing.T) {
         { Token = "token T2", ChatID = "chatID T2"},
         { Token = "token T3", ChatID = "chatID T3"},
     ]
+
+[Slack]
+    Secret="s0"
+	Additional = [
+		{ Secret = "s1"},
+		{ Secret = "s2"},
+	]
 `
 
 	expectedCfg := CredentialsConfig{
@@ -196,6 +212,19 @@ func TestLoadCredentialsConfig(t *testing.T) {
 				{
 					Token:  "token T3",
 					ChatID: "chatID T3",
+				},
+			},
+		},
+		Slack: SlackCredentialsConfig{
+			SlackSecretConfig: SlackSecretConfig{
+				Secret: "s0",
+			},
+			Additional: []SlackSecretConfig{
+				{
+					Secret: "s1",
+				},
+				{
+					Secret: "s2",
 				},
 			},
 		},

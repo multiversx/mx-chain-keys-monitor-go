@@ -5,6 +5,7 @@ type CredentialsConfig struct {
 	Pushover PushoverCredentialsConfig
 	Smtp     EmailPasswordConfig
 	Telegram TelegramCredentialsConfig
+	Slack    SlackCredentialsConfig
 }
 
 // TokenUserKeyConfig defines a struct that contains one token and one user key
@@ -35,4 +36,15 @@ type EmailPasswordConfig struct {
 type TelegramCredentialsConfig struct {
 	TokenChatIDConfig
 	Additional []TokenChatIDConfig
+}
+
+// SlackSecretConfig defines a slack secret credential
+type SlackSecretConfig struct {
+	Secret string
+}
+
+// SlackCredentialsConfig defines the Slack service credentials
+type SlackCredentialsConfig struct {
+	SlackSecretConfig
+	Additional []SlackSecretConfig
 }

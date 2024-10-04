@@ -47,6 +47,12 @@ func CreateOutputNotifiers(allConfig config.AllConfigs) ([]executors.OutputNotif
 
 		log.Debug("created telegram notifier(s)", "num telegram notifiers", len(telegramNotifiers))
 	}
+	if allConfig.Config.OutputNotifiers.Slack.Enabled {
+		slackNotifiers := createSlackNotifiers(allConfig)
+		outputNotifiers = append(outputNotifiers, slackNotifiers...)
+
+		log.Debug("created slack notifier(s)", "num slack notifiers", len(slackNotifiers))
+	}
 
 	return outputNotifiers, nil
 }
@@ -85,6 +91,25 @@ func createTelegramNotifiers(allConfig config.AllConfigs) []executors.OutputNoti
 			allConfig.Config.OutputNotifiers.Telegram.URL,
 			credentials.Token,
 			credentials.ChatID,
+		)
+
+		notifierInstances = append(notifierInstances, notifierInstance)
+	}
+
+	return notifierInstances
+}
+
+func createSlackNotifiers(allConfig config.AllConfigs) []executors.OutputNotifier {
+	defaultNotifier := notifiers.NewSlackNotifier(
+		allConfig.Config.OutputNotifiers.Slack.URL,
+		allConfig.Credentials.Slack.Secret,
+	)
+
+	notifierInstances := []executors.OutputNotifier{defaultNotifier}
+	for _, credentials := range allConfig.Credentials.Slack.Additional {
+		notifierInstance := notifiers.NewSlackNotifier(
+			allConfig.Config.OutputNotifiers.Slack.URL,
+			credentials.Secret,
 		)
 
 		notifierInstances = append(notifierInstances, notifierInstance)
