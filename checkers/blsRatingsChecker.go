@@ -10,6 +10,7 @@ import (
 const minAlarmDeltaRatingDrop = float64(0.0)
 const maxAlarmDeltaRatingDrop = float64(100.0)
 const jailThreshold = float32(10)
+const startRating = float32(50)
 const ratingDropMessageFormat = "Rating drop detected: temp rating: %0.2f, rating: %0.2f"
 const imminentJailMessageFormat = "Imminent jail: temp rating: %0.2f, rating: %0.2f"
 
@@ -72,6 +73,9 @@ func (checker *blsRatingsChecker) Check(statistics map[string]*core.ValidatorSta
 			continue
 		}
 		if stats.TempRating+checker.alarmDeltaRatingDrop > stats.Rating {
+			continue
+		}
+		if stats.TempRating == startRating && stats.TempRating < stats.Rating {
 			continue
 		}
 

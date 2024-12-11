@@ -92,6 +92,10 @@ func TestBlsRatingsChecker_Check(t *testing.T) {
 			TempRating: 50,
 			Rating:     50,
 		},
+		"bls11": {
+			TempRating: 50,
+			Rating:     100,
+		},
 		"": { // this should not be triggered on any test
 			TempRating: 0,
 			Rating:     0,
@@ -136,6 +140,14 @@ func TestBlsRatingsChecker_Check(t *testing.T) {
 		t.Parallel()
 
 		instance, _ := NewBLSRatingsChecker([]string{"bls4", "bls10"}, "test", 1.0)
+		response, err := instance.Check(testMap, nil)
+		assert.Nil(t, err)
+		assert.Empty(t, response)
+	})
+	t.Run("bls key start rating should not signal", func(t *testing.T) {
+		t.Parallel()
+
+		instance, _ := NewBLSRatingsChecker([]string{"bls11"}, "test", 1.0)
 		response, err := instance.Check(testMap, nil)
 		assert.Nil(t, err)
 		assert.Empty(t, response)
